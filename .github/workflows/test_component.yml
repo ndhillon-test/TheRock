@@ -9,6 +9,9 @@ on:
       artifact_run_id:
         type: string
         default: ""
+      artifact_run_github_repo:
+        type: string
+        default: "ROCm/TheRock"
       artifact_group:
         type: string
       amdgpu_families:
@@ -118,12 +121,18 @@ jobs:
 
       - name: Run setup test environment workflow
         timeout-minutes: 15
+        uses: './.github/actions/setup_test_environment'
         env:
           RETRY_THIS_STEP: "true"
           STEP_TIMEOUT_MINUTES: "15" # should match timeout-minutes specified above at this step
-        uses: './.github/actions/setup_test_environment'
+          STEP_NAME_PREFIX: >-
+            Test ${{ fromJSON(inputs.component).job_name }}
+            (shard ${{ matrix.shard }}/${{ fromJSON(inputs.component).total_shards }})
+            (${{ inputs.amdgpu_families }})
+            ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
         with:
           ARTIFACT_RUN_ID: ${{ env.ARTIFACT_RUN_ID }}
+          ARTIFACT_RUN_GITHUB_REPO: ${{ inputs.artifact_run_github_repo }}
           # TODO(#3381): revert back to `inputs.artifact_group` once issue is resolved
           ARTIFACT_GROUP: ${{ inputs.amdgpu_families }}
           AMDGPU_TARGETS: ${{ inputs.amdgpu_targets }}
