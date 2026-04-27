@@ -160,6 +160,7 @@ test_matrix = {
             "linux": 4,
             "windows": 4,
         },
+        "runs_on_suffix": "-exclusive",
     },
     # hipFile (storage-libs) unit tests. CPU-only (mocked), so they run quickly
     # and do not require a GPU runner.
