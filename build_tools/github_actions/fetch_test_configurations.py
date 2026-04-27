@@ -155,6 +155,7 @@ test_matrix = {
             "linux": 4,
             "windows": 4,
         },
+        "runs_on_suffix": "-exclusive",
     },
     # BLAS tests
     "rocblas": {
