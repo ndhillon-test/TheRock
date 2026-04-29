@@ -218,6 +218,7 @@ jobs:
           # in ROCm/rocm-systems#8050 (Windows -> PAL, Linux -> ROCr).
           GPU_ENABLE_PAL: ${{ fromJSON(inputs.component).gpu_enable_pal || (inputs.platform == 'windows' && '1' || '0') }}
           RETRY_THIS_STEP: "true"
+          STEP_RETRY: "true"
           RETRY_COUNT: "1"
           RETRY_DELAY: "7"
           STEP_TIMEOUT_MINUTES: ${{ fromJSON(inputs.component).timeout_minutes }}
