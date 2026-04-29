@@ -40,15 +40,16 @@ runs:
       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
       with:
         python-version: 3.12
+  
+    - name: "Install UV (Windows)"
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: irm https://astral.sh/uv/install.ps1 | iex
 
-    - name: "Install UV"
+    - name: "Install UV (Linux/macOS)"
+      if: runner.os != 'Windows'
       shell: bash
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          powershell -Command "irm https://astral.sh/uv/install.ps1 | iex"
-        else
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-        fi
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
     - name: Create Python venv
       shell: bash
