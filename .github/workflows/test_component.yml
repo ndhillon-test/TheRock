@@ -187,7 +187,7 @@ jobs:
           # Windows hip-tests (PAL=1, ROCR=0) set this via matrix; other components
           # leave it empty. #3587
           GPU_ENABLE_PAL: ${{ fromJSON(inputs.component).gpu_enable_pal }}
-          RETRY_THIS_STEP: "true"
+          STEP_RETRY: "true"
           RETRY_COUNT: "1"
           RETRY_DELAY: "7"
           STEP_TIMEOUT_MINUTES: ${{ fromJSON(inputs.component).timeout_minutes }}
