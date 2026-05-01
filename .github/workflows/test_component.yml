@@ -241,13 +241,24 @@ jobs:
           echo "Built ROCm:  ${OUTPUT_ARTIFACTS_DIR}/bin"
 
           echo ""
-          echo "=== Checking if our DLLs exist ==="
-          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/amdhip64.dll" 2>/dev/null || echo "amdhip64.dll NOT FOUND in build"
-          ls -lh "C:/Program Files/AMD/ROCm/6.4/bin/amdhip64.dll" 2>/dev/null || echo "System amdhip64.dll NOT FOUND"
+          echo "=== Comprehensive build directory listing ==="
+          echo "All DLLs in build/bin:"
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*.dll 2>/dev/null | wc -l
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*.dll 2>/dev/null || echo "No DLLs found"
 
           echo ""
-          echo "=== Key runtime DLLs in build/bin ==="
-          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*hip*.dll "${OUTPUT_ARTIFACTS_DIR}/bin/"*hsa*.dll "${OUTPUT_ARTIFACTS_DIR}/bin/"*amdhip*.dll 2>/dev/null || echo "No HIP/HSA DLLs found"
+          echo "=== Build directory structure ==="
+          find "${OUTPUT_ARTIFACTS_DIR}" -type f -name "*.dll" | head -30
+
+          echo ""
+          echo "=== Searching for HSA runtime files ==="
+          find "${OUTPUT_ARTIFACTS_DIR}" -type f \( -name "*hsa-runtime*" -o -name "hsa*.dll" -o -name "*rocr*.dll" \) 2>/dev/null || echo "No HSA runtime files found"
+
+          echo ""
+          echo "=== Checking for specific runtime DLLs ==="
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/amdhip64.dll" 2>/dev/null || echo "amdhip64.dll NOT FOUND"
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/amdhip64_7.dll" 2>/dev/null || echo "amdhip64_7.dll NOT FOUND"
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"hsa*.dll 2>/dev/null || echo "hsa*.dll NOT FOUND"
 
       - name: Test
         id: test
