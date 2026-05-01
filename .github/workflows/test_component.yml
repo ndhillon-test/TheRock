@@ -206,6 +206,7 @@ jobs:
 
       - name: Debug - Check DLL dependencies and paths
         if: ${{ runner.os == 'Windows' }}
+        continue-on-error: true
         shell: bash
         run: |
           echo "=== Checking offload-arch.exe dependencies ==="
@@ -232,6 +233,7 @@ jobs:
 
       - name: Debug - Verify TheRock runtime is used (not system ROCm)
         if: ${{ runner.os == 'Windows' }}
+        continue-on-error: true
         shell: bash
         run: |
           echo "=== Checking which DLLs will be loaded ==="
@@ -248,11 +250,11 @@ jobs:
 
           echo ""
           echo "=== Build directory structure ==="
-          find "${OUTPUT_ARTIFACTS_DIR}" -type f -name "*.dll" | head -30
+          find "${OUTPUT_ARTIFACTS_DIR}" -type f -name "*.dll" 2>/dev/null | head -30 || echo "Find command failed"
 
           echo ""
           echo "=== Searching for HSA runtime files ==="
-          find "${OUTPUT_ARTIFACTS_DIR}" -type f \( -name "*hsa-runtime*" -o -name "hsa*.dll" -o -name "*rocr*.dll" \) 2>/dev/null || echo "No HSA runtime files found"
+          find "${OUTPUT_ARTIFACTS_DIR}" -type f \( -name "*hsa-runtime*" -o -name "hsa*.dll" -o -name "*rocr*.dll" \) 2>/dev/null | head -20 || echo "No HSA runtime files found"
 
           echo ""
           echo "=== Checking for specific runtime DLLs ==="
