@@ -152,10 +152,6 @@ jobs:
           git config --global --add safe.directory $PWD
           git config fetch.parallel 10
 
-      - name: Runner health status
-        run: |
-          python ./build_tools/health_status.py
-
       - name: Setup Visual Studio Environment
         if: ${{ runner.os == 'Windows' }}
         shell: cmd
@@ -168,6 +164,10 @@ jobs:
           echo VisualStudioVersion=%VisualStudioVersion%>> %GITHUB_ENV%
           echo VSCMD_ARG_HOST_ARCH=%VSCMD_ARG_HOST_ARCH%>> %GITHUB_ENV%
           echo VSCMD_ARG_TGT_ARCH=%VSCMD_ARG_TGT_ARCH%>> %GITHUB_ENV%
+
+      - name: Runner health status
+        run: |
+          python ./build_tools/health_status.py
 
       - name: Driver / GPU sanity check
         timeout-minutes: 3
