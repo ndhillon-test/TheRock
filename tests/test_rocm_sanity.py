@@ -29,10 +29,19 @@ def is_windows():
     return "windows" == platform.system().lower()
 
 
-def run_command(command: list[str], cwd=None):
+def run_command(command: list[str], cwd=None, env=None):
     logger.info(f"++ Run [{cwd}]$ {shlex.join(command)}")
+
+    # Log critical environment variables for Windows debugging
+    if is_windows():
+        exec_env = env or os.environ
+        logger.info(f"   HIP_VISIBLE_DEVICES={exec_env.get('HIP_VISIBLE_DEVICES', '<not set>')}")
+        logger.info(f"   ROCR_VISIBLE_DEVICES={exec_env.get('ROCR_VISIBLE_DEVICES', '<not set>')}")
+        logger.info(f"   GPU_DEVICE_ORDINAL={exec_env.get('GPU_DEVICE_ORDINAL', '<not set>')}")
+        logger.info(f"   PATH (first 3)={os.pathsep.join(exec_env.get('PATH', '').split(os.pathsep)[:3])}")
+
     process = subprocess.run(
-        command, capture_output=True, cwd=cwd, shell=is_windows(), text=True
+        command, capture_output=True, cwd=cwd, shell=is_windows(), text=True, env=env
     )
     if process.returncode != 0:
         logger.error(f"Command failed!")
@@ -103,7 +112,10 @@ class TestROCmSanity:
             / "bin"
             / offload_arch_executable_file
         ).resolve()
-        process = run_command([str(offload_arch_path)])
+
+        # Pass current environment to ensure GPU visibility settings are propagated
+        test_env = os.environ.copy()
+        process = run_command([str(offload_arch_path)], env=test_env)
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output

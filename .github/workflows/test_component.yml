@@ -204,6 +204,51 @@ jobs:
           echo "$PATH" | tr ':' '\n' | grep -i "rocm\|amd\|hip" || echo "  <no ROCm paths found>"
           echo "======================================"
 
+      - name: Debug - Check DLL dependencies and paths
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          echo "=== Checking offload-arch.exe dependencies ==="
+          OFFLOAD_ARCH="${OUTPUT_ARTIFACTS_DIR}/lib/llvm/bin/offload-arch.exe"
+
+          echo "File exists: $(test -f "$OFFLOAD_ARCH" && echo YES || echo NO)"
+          echo "File size: $(stat -c%s "$OFFLOAD_ARCH" 2>/dev/null || echo UNKNOWN)"
+
+          echo ""
+          echo "=== DLL Dependencies (dumpbin) ==="
+          dumpbin //DEPENDENTS "$OFFLOAD_ARCH" 2>&1 || echo "dumpbin failed or not available"
+
+          echo ""
+          echo "=== Checking for key DLLs in build/bin ==="
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*.dll 2>/dev/null | head -20 || echo "No DLLs found"
+
+          echo ""
+          echo "=== PATH directories (first 10) ==="
+          echo "$PATH" | tr ':' '\n' | head -10
+
+          echo ""
+          echo "=== Try running offload-arch directly ==="
+          "$OFFLOAD_ARCH" 2>&1 || echo "offload-arch failed with exit code $?"
+
+      - name: Debug - Verify TheRock runtime is used (not system ROCm)
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          echo "=== Checking which DLLs will be loaded ==="
+          export PATH="${OUTPUT_ARTIFACTS_DIR}/bin:$PATH"
+
+          echo "System ROCm: C:\\Program Files\\AMD\\ROCm\\6.4\\"
+          echo "Built ROCm:  ${OUTPUT_ARTIFACTS_DIR}/bin"
+
+          echo ""
+          echo "=== Checking if our DLLs exist ==="
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/amdhip64.dll" 2>/dev/null || echo "amdhip64.dll NOT FOUND in build"
+          ls -lh "C:/Program Files/AMD/ROCm/6.4/bin/amdhip64.dll" 2>/dev/null || echo "System amdhip64.dll NOT FOUND"
+
+          echo ""
+          echo "=== Key runtime DLLs in build/bin ==="
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*hip*.dll "${OUTPUT_ARTIFACTS_DIR}/bin/"*hsa*.dll "${OUTPUT_ARTIFACTS_DIR}/bin/"*amdhip*.dll 2>/dev/null || echo "No HIP/HSA DLLs found"
+
       - name: Test
         id: test
         timeout-minutes: ${{ fromJSON(inputs.component).timeout_minutes }}
