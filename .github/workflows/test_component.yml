@@ -188,6 +188,22 @@ jobs:
           echo "HSA_XNACK=1" >> $GITHUB_ENV
           echo "ASAN_SYMBOLIZER_PATH=${{ env.OUTPUT_ARTIFACTS_DIR }}/llvm/bin/llvm-symbolizer" >> $GITHUB_ENV
 
+      - name: Print ROCm/GPU Environment Variables
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          echo "=== ROCm/GPU Environment Variables ==="
+          echo "HIP_VISIBLE_DEVICES: ${HIP_VISIBLE_DEVICES:-<not set>}"
+          echo "ROCR_VISIBLE_DEVICES: ${ROCR_VISIBLE_DEVICES:-<not set>}"
+          echo "GPU_DEVICE_ORDINAL: ${GPU_DEVICE_ORDINAL:-<not set>}"
+          echo "HIP_PATH: ${HIP_PATH:-<not set>}"
+          echo "ROCM_PATH: ${ROCM_PATH:-<not set>}"
+          echo "HSA_PATH: ${HSA_PATH:-<not set>}"
+          echo "AMD_LOG_LEVEL: ${AMD_LOG_LEVEL:-<not set>}"
+          echo "PATH (ROCm parts):"
+          echo "$PATH" | tr ':' '\n' | grep -i "rocm\|amd\|hip" || echo "  <no ROCm paths found>"
+          echo "======================================"
+
       - name: Test
         id: test
         timeout-minutes: ${{ fromJSON(inputs.component).timeout_minutes }}
