@@ -243,6 +243,15 @@ jobs:
           echo "Built ROCm:  ${OUTPUT_ARTIFACTS_DIR}/bin"
 
           echo ""
+          echo "=== Finding ALL amdhip64*.dll locations ==="
+          find "${OUTPUT_ARTIFACTS_DIR}" -name "amdhip64*.dll" 2>/dev/null || echo "No amdhip64 DLLs found in build"
+
+          echo ""
+          echo "=== Checking system ROCm DLLs ==="
+          ls -lh "C:/WINDOWS/system32/amdhip64"*.dll 2>/dev/null || echo "No system32 amdhip64 DLLs"
+          ls -lh "C:/Program Files/AMD/ROCm/6.4/bin/amdhip64"*.dll 2>/dev/null || echo "No ROCm 6.4 amdhip64 DLLs"
+
+          echo ""
           echo "=== Comprehensive build directory listing ==="
           echo "All DLLs in build/bin:"
           ls -lh "${OUTPUT_ARTIFACTS_DIR}/bin/"*.dll 2>/dev/null | wc -l
