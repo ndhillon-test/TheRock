@@ -12,11 +12,10 @@ logging.basicConfig(level=logging.INFO)
 SCRIPT_DIR = Path(__file__).resolve().parent
 THEROCK_DIR = SCRIPT_DIR.parent.parent.parent
 
-env = os.environ.copy()
 # Enable verbose ROCm logging, see
 # https://rocm.docs.amd.com/projects/HIP/en/latest/how-to/debugging.html
 # Note: ROCM_KPACK_DEBUG is set for all components by test_component.yml.
-env["AMD_LOG_LEVEL"] = "4"
+os.environ["AMD_LOG_LEVEL"] = "4"
 
 # The sanity checks run tools like 'offload-arch' which may search for DLLs on
 # multiple search paths (PATH, CWD, system32, etc.).
@@ -27,10 +26,9 @@ env["AMD_LOG_LEVEL"] = "4"
 # https://github.com/ROCm/TheRock/pull/3230#issuecomment-3844854922.
 if sys.platform == "win32":
     output_artifacts_dir = Path(os.getenv("OUTPUT_ARTIFACTS_DIR", "./build")).resolve()
-    env["HIP_CLANG_PATH"] = str(output_artifacts_dir / "lib" / "llvm" / "bin")
-    # TEMPORARY: Disable PATH prepending to test if system DLLs work
-    # env["PATH"] = str(output_artifacts_dir / "bin") + os.pathsep + env.get("PATH", "")
-    logging.info(f"Skipping build/bin PATH prepending - using system DLLs for testing")
+    os.environ["HIP_CLANG_PATH"] = str(output_artifacts_dir / "lib" / "llvm" / "bin")
+    os.environ["PATH"] = str(output_artifacts_dir / "bin") + os.pathsep + os.environ.get("PATH", "")
+    logging.info(f"Prepended build/bin to PATH for ROCm DLL loading")
 
 cmd = [
     sys.executable,
@@ -43,4 +41,6 @@ cmd = [
 
 logging.info(f"++ Exec [{THEROCK_DIR}]$ {' '.join(cmd)}")
 
-subprocess.run(cmd, cwd=THEROCK_DIR, env=env, check=True)
+# Don't pass explicit env parameter - let subprocess inherit os.environ naturally
+# to preserve GPU visibility context on Windows
+subprocess.run(cmd, cwd=THEROCK_DIR, check=True)
