@@ -183,14 +183,7 @@ jobs:
 
           echo ""
           echo "=== Depth 1: From venv Python subprocess ==="
-          python -c "
-import subprocess
-import sys
-result = subprocess.run([sys.executable, 'check_job_object.py'], capture_output=True, text=True)
-print(result.stdout)
-if result.stderr:
-    print('STDERR:', result.stderr, file=sys.stderr)
-"
+          python -c 'import subprocess; import sys; result = subprocess.run([sys.executable, "check_job_object.py"], capture_output=True, text=True); print(result.stdout); print(result.stderr, file=sys.stderr) if result.stderr else None'
 
       - name: Setup Additional Requirements
         if: ${{ fromJSON(inputs.component).additional_requirements_files != '' }}
