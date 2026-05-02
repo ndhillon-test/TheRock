@@ -19,16 +19,15 @@ os.environ["AMD_LOG_LEVEL"] = "4"
 
 # The sanity checks run tools like 'offload-arch' which may search for DLLs on
 # multiple search paths (PATH, CWD, system32, etc.).
-# For typical "installs" of ROCm, the rocm/bin/ dir can be expected to be
-# added to PATH, so we do that here. If we don't do this, DLLs on test runners
-# in system32 may be picked up instead and the tests may not be representative,
-# see https://github.com/ROCm/TheRock/issues/2019 and
-# https://github.com/ROCm/TheRock/pull/3230#issuecomment-3844854922.
+# On Windows, the build artifacts do not include HSA runtime DLLs (hsa-runtime64.dll, etc.),
+# so we must use system ROCm DLLs from system32 for the sanity test to work.
+# The build/bin amdhip64_7.dll cannot initialize without the HSA runtime.
 if sys.platform == "win32":
     output_artifacts_dir = Path(os.getenv("OUTPUT_ARTIFACTS_DIR", "./build")).resolve()
     os.environ["HIP_CLANG_PATH"] = str(output_artifacts_dir / "lib" / "llvm" / "bin")
-    os.environ["PATH"] = str(output_artifacts_dir / "bin") + os.pathsep + os.environ.get("PATH", "")
-    logging.info(f"Prepended build/bin to PATH for ROCm DLL loading")
+    # Do NOT prepend build/bin to PATH - it lacks HSA runtime DLLs
+    # Let offload-arch use system32 DLLs which have complete runtime
+    logging.info(f"Using system ROCm DLLs for sanity test (build lacks HSA runtime DLLs)")
 
 cmd = [
     sys.executable,
