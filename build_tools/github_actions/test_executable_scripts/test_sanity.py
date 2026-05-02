@@ -29,9 +29,17 @@ if sys.platform == "win32":
     # Point HIP_PATH to build directory so hipcc uses build headers, not system headers
     # This fixes: error: use of undeclared identifier '__AMDGCN_WAVEFRONT_SIZE'
     # System ROCm 6.4 headers are incompatible with build's clang
+    # CRITICAL: Must unset system ROCm environment variables first, then set to build
     build_hip_path = str(output_artifacts_dir)
+
+    # Remove system ROCm paths that may be set machine-wide
+    os.environ.pop("HIP_PATH_64", None)
+    os.environ.pop("HIPINFO", None)
+
+    # Set to build directory
     os.environ["HIP_PATH"] = build_hip_path
-    logging.info(f"Set HIP_PATH={build_hip_path} to use build headers (not system ROCm 6.4)")
+    logging.info(f"Set HIP_PATH={build_hip_path} (overriding system ROCm 6.4)")
+    logging.info(f"  Removed HIP_PATH_64, HIPINFO to force use of build headers")
 
     # Do NOT prepend build/bin to PATH - it lacks HSA runtime DLLs
     # Let offload-arch use system32 DLLs which have complete runtime
