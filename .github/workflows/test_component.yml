@@ -220,18 +220,40 @@ jobs:
           echo "Detected GPU architecture: $GPU_ARCH"
           echo "DETECTED_GPU_ARCH=$GPU_ARCH" >> $GITHUB_ENV
 
-      - name: Test GPU Detection - Diagnostic
+      - name: Test GPU Detection - Comparison (ORIGINAL vs WORKAROUND)
         if: ${{ runner.os == 'Windows' }}
         continue-on-error: true
         shell: bash
         run: |
           echo "=========================================="
-          echo "GPU Detection Diagnostic"
+          echo "GPU Detection Comparison Test"
           echo "=========================================="
           echo ""
           echo "DETECTED_GPU_ARCH from workflow: ${DETECTED_GPU_ARCH}"
           echo ""
-          echo "Running diagnostic test to confirm workaround is active:"
+          echo "Running BOTH versions to compare:"
+          echo "1. ORIGINAL (test_rocm_sanity_original.py) - WITHOUT workaround"
+          echo "2. WORKAROUND (test_rocm_sanity.py) - WITH workaround"
+          echo ""
+          echo "This will show if there's actually a difference!"
+          echo "=========================================="
+          echo ""
+
+          echo ">>> TEST 1: ORIGINAL (no workaround) - Running offload-arch from subprocess"
+          python -m pytest tests/test_rocm_sanity_original.py::TestROCmSanity::test_hip_printf -v --log-cli-level=info --timeout=300 || echo "ORIGINAL TEST RESULT: $?"
+
+          echo ""
+          echo "=========================================="
+          echo ""
+
+          echo ">>> TEST 2: WORKAROUND - Using DETECTED_GPU_ARCH env var"
+          python -m pytest tests/test_rocm_sanity.py::TestROCmSanity::test_hip_printf -v --log-cli-level=info --timeout=300 || echo "WORKAROUND TEST RESULT: $?"
+
+          echo ""
+          echo "=========================================="
+          echo ""
+
+          echo ">>> DIAGNOSTIC: Confirm workaround is active"
           python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_gpu_detection_diagnostic -v --log-cli-level=info
 
       - name: Test
