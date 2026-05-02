@@ -356,6 +356,15 @@ jobs:
           echo "=========================================="
           echo ""
 
+          echo ">>> Pre-test verification: Check .hipVersion exists"
+          if [ -f "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion" ]; then
+            echo "CONFIRMED: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion exists"
+            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+          else
+            echo "ERROR: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion NOT FOUND!"
+          fi
+          echo ""
+
           echo ">>> TEST 1: ORIGINAL (no workaround) - Running offload-arch from subprocess"
           python -m pytest tests/test_rocm_sanity_original.py::TestROCmSanity::test_hip_printf -v --log-cli-level=info --timeout=300 || echo "ORIGINAL TEST RESULT: $?"
 
