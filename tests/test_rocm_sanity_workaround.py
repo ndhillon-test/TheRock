@@ -44,7 +44,7 @@ def run_command(command: list[str], cwd=None, env=None):
     logger.info(f"++ Run [{cwd}]$ {shlex.join(command)}")
 
     process = subprocess.run(
-        command, capture_output=True, cwd=cwd, shell=False, text=True, env=env
+        command, capture_output=True, cwd=cwd, shell=is_windows(), text=True, env=env
     )
     if process.returncode != 0:
         logger.error(f"Command failed!")
