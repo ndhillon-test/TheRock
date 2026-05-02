@@ -382,6 +382,13 @@ jobs:
           echo ">>> DIAGNOSTIC: Confirm workaround is active"
           python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_gpu_detection_diagnostic -v --log-cli-level=info
 
+          echo ""
+          echo "=========================================="
+          echo ""
+
+          echo ">>> TEST 3: FULL WORKAROUND - HIPCC_COMPILE_FLAGS_APPEND + DETECTED_GPU_ARCH"
+          python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_hip_printf_with_workaround -v --log-cli-level=info --timeout=300 || echo "FULL WORKAROUND TEST RESULT: $?"
+
       - name: Test
         id: test
         timeout-minutes: ${{ fromJSON(inputs.component).timeout_minutes }}

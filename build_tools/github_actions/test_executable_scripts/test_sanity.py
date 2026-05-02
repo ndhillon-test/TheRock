@@ -41,13 +41,6 @@ if sys.platform == "win32":
     logging.info(f"Set HIP_PATH={build_hip_path} (overriding system ROCm 6.4)")
     logging.info(f"  Removed HIP_PATH_64, HIPINFO to force use of build headers")
 
-    # CRITICAL: Force hipcc to use build headers via explicit include flag
-    # Even with HIP_PATH and .hipVersion, hipcc on Windows still uses system headers
-    # Use HIPCC_COMPILE_FLAGS_APPEND to explicitly add -I flag
-    build_include_path = str(output_artifacts_dir / "include")
-    os.environ["HIPCC_COMPILE_FLAGS_APPEND"] = f"-I{build_include_path}"
-    logging.info(f"Set HIPCC_COMPILE_FLAGS_APPEND=-I{build_include_path}")
-
     # Do NOT prepend build/bin to PATH - it lacks HSA runtime DLLs
     # Let offload-arch use system32 DLLs which have complete runtime
     logging.info(f"Using system ROCm DLLs for runtime (build lacks HSA runtime DLLs)")

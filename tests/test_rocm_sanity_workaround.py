@@ -120,6 +120,17 @@ class TestROCmSanityWorkaround:
 
         logger.info(f"Using GPU architecture: {offload_arch}")
 
+        # WORKAROUND: Force hipcc to use build headers via explicit include flag
+        # Even with HIP_PATH and .hipVersion, hipcc on Windows still uses system headers
+        # Use HIPCC_COMPILE_FLAGS_APPEND to explicitly add -I flag
+        test_env = os.environ.copy()
+        if is_windows():
+            output_artifacts_dir = Path(os.getenv("OUTPUT_ARTIFACTS_DIR", "./build")).resolve()
+            build_include_path = str(output_artifacts_dir / "include")
+            test_env["HIPCC_COMPILE_FLAGS_APPEND"] = f"-I{build_include_path}"
+            logger.info(f"[WORKAROUND] Set HIPCC_COMPILE_FLAGS_APPEND=-I{build_include_path}")
+            logger.info("This forces hipcc to use build headers instead of system ROCm 6.4 headers")
+
         # Compile test program using hipcc
         hipcc_check_executable_file = f"hipcc_check_workaround{platform_executable_suffix}"
         run_command(
@@ -133,6 +144,7 @@ class TestROCmSanityWorkaround:
                 hipcc_check_executable_file,
             ],
             cwd=str(THEROCK_BIN_DIR),
+            env=test_env,
         )
 
         # Run the compiled executable
