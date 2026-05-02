@@ -25,57 +25,17 @@ os.environ["AMD_LOG_LEVEL"] = "4"
 if sys.platform == "win32":
     output_artifacts_dir = Path(os.getenv("OUTPUT_ARTIFACTS_DIR", "./build")).resolve()
     os.environ["HIP_CLANG_PATH"] = str(output_artifacts_dir / "lib" / "llvm" / "bin")
+
+    # Point HIP_PATH to build directory so hipcc uses build headers, not system headers
+    # This fixes: error: use of undeclared identifier '__AMDGCN_WAVEFRONT_SIZE'
+    # System ROCm 6.4 headers are incompatible with build's clang
+    build_hip_path = str(output_artifacts_dir)
+    os.environ["HIP_PATH"] = build_hip_path
+    logging.info(f"Set HIP_PATH={build_hip_path} to use build headers (not system ROCm 6.4)")
+
     # Do NOT prepend build/bin to PATH - it lacks HSA runtime DLLs
     # Let offload-arch use system32 DLLs which have complete runtime
-    logging.info(f"Using system ROCm DLLs for sanity test (build lacks HSA runtime DLLs)")
-
-    # DIAGNOSTIC: Test GPU access at different subprocess depths
-    # This helps identify where GPU access is lost in the process hierarchy:
-    # GHA Runner → bash → test_sanity.py → pytest → test_rocm_sanity.py → offload-arch
-    logging.info("=== GPU Access Diagnostic: Testing at subprocess depth 1 ===")
-    offload_arch = output_artifacts_dir / "lib" / "llvm" / "bin" / "offload-arch.exe"
-
-    # Test 1: Direct subprocess.run(shell=False) from test_sanity.py
-    logging.info("Test 1: subprocess.run(shell=False)")
-    result1 = subprocess.run([str(offload_arch)], capture_output=True, text=True, shell=False)
-    logging.info(f"  Exit code: {result1.returncode}")
-    logging.info(f"  Stdout: {result1.stdout[:100] if result1.stdout else '<empty>'}")
-    logging.info(f"  Stderr: {result1.stderr[:100] if result1.stderr else '<empty>'}")
-
-    # Test 2: subprocess.run(shell=True)
-    logging.info("Test 2: subprocess.run(shell=True)")
-    result2 = subprocess.run(str(offload_arch), capture_output=True, text=True, shell=True)
-    logging.info(f"  Exit code: {result2.returncode}")
-    logging.info(f"  Stdout: {result2.stdout[:100] if result2.stdout else '<empty>'}")
-    logging.info(f"  Stderr: {result2.stderr[:100] if result2.stderr else '<empty>'}")
-
-    # Test 3: os.system (redirecting to temp file to capture output)
-    logging.info("Test 3: os.system")
-    temp_output = output_artifacts_dir / "offload_arch_test3.txt"
-    exit_code = os.system(f'"{offload_arch}" > "{temp_output}" 2>&1')
-    test3_output = temp_output.read_text() if temp_output.exists() else "<no output>"
-    logging.info(f"  Exit code: {exit_code}")
-    logging.info(f"  Output: {test3_output[:100]}")
-    if temp_output.exists():
-        temp_output.unlink()
-
-    # Test 4: Through cmd.exe
-    logging.info("Test 4: subprocess via cmd.exe")
-    result4 = subprocess.run(["cmd.exe", "/c", str(offload_arch)], capture_output=True, text=True, shell=False)
-    logging.info(f"  Exit code: {result4.returncode}")
-    logging.info(f"  Stdout: {result4.stdout[:100] if result4.stdout else '<empty>'}")
-    logging.info(f"  Stderr: {result4.stderr[:100] if result4.stderr else '<empty>'}")
-
-    # Test 5: Through bash
-    logging.info("Test 5: subprocess via bash")
-    bash_path = str(offload_arch).replace("\\", "/")
-    result5 = subprocess.run(["bash", "-c", bash_path], capture_output=True, text=True, shell=False)
-    logging.info(f"  Exit code: {result5.returncode}")
-    logging.info(f"  Stdout: {result5.stdout[:100] if result5.stdout else '<empty>'}")
-    logging.info(f"  Stderr: {result5.stderr[:100] if result5.stderr else '<empty>'}")
-
-    logging.info("=== End GPU Access Diagnostic ===")
-    logging.info("")
+    logging.info(f"Using system ROCm DLLs for runtime (build lacks HSA runtime DLLs)")
 
 cmd = [
     sys.executable,
