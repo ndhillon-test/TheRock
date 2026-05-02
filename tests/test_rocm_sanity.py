@@ -46,8 +46,9 @@ def run_command(command: list[str], cwd=None, env=None):
         if not has_system32:
             logger.warning(f"   WARNING: system32 not in PATH! Full PATH has {len(path_parts)} entries")
 
+    # Don't use shell=True on Windows - it spawns cmd.exe which may interfere with GPU visibility
     process = subprocess.run(
-        command, capture_output=True, cwd=cwd, shell=is_windows(), text=True, env=env
+        command, capture_output=True, cwd=cwd, shell=False, text=True, env=env
     )
     if process.returncode != 0:
         logger.error(f"Command failed!")
