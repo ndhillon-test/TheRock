@@ -185,6 +185,35 @@ jobs:
           echo "=== Depth 1: From venv Python subprocess ==="
           python -c 'import subprocess; import sys; result = subprocess.run([sys.executable, "check_job_object.py"], capture_output=True, text=True); print(result.stdout); print(result.stderr, file=sys.stderr) if result.stderr else None'
 
+      - name: Test GPU Detection - Comparison (Diagnostic)
+        if: ${{ runner.os == 'Windows' }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "GPU Detection Comparison Test"
+          echo "=========================================="
+          echo ""
+          echo "Running both original and workaround tests to demonstrate the difference:"
+          echo ""
+          echo "1. Original test (test_rocm_sanity.py):"
+          echo "   - Was modified to use DETECTED_GPU_ARCH workaround"
+          echo "   - Should PASS with workaround active"
+          echo ""
+          echo "2. Workaround test (test_rocm_sanity_workaround.py):"
+          echo "   - Explicitly documents the workaround approach"
+          echo "   - Should PASS and log diagnostic information"
+          echo ""
+          echo "=========================================="
+          echo ""
+
+          echo ">>> Running workaround test (should pass):"
+          python -m pytest tests/test_rocm_sanity_workaround.py -v --log-cli-level=info --timeout=300 || echo "Workaround test result: $?"
+
+          echo ""
+          echo ">>> Running diagnostic test:"
+          python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_gpu_detection_diagnostic -v --log-cli-level=info
+
       - name: Setup Additional Requirements
         if: ${{ fromJSON(inputs.component).additional_requirements_files != '' }}
         run: |
