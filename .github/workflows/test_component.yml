@@ -232,6 +232,12 @@ jobs:
           echo "$PATH" | tr ':' '\n' | head -10
 
           echo ""
+          echo "=== Environment when running offload-arch directly ==="
+          echo "Current shell: $0"
+          echo "SHLVL: $SHLVL"
+          echo "PPID: $PPID"
+          echo "Running under: $(ps -p $PPID -o comm=)"
+          echo ""
           echo "=== Try running offload-arch directly ==="
           "$OFFLOAD_ARCH" 2>&1 || echo "offload-arch failed with exit code $?"
 

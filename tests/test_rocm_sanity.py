@@ -46,6 +46,11 @@ def run_command(command: list[str], cwd=None, env=None):
         if not has_system32:
             logger.warning(f"   WARNING: system32 not in PATH! Full PATH has {len(path_parts)} entries")
 
+        # Log process context information
+        logger.info(f"   Current Python PID: {os.getpid()}")
+        logger.info(f"   Parent PID: {os.getppid()}")
+        logger.info(f"   CWD: {os.getcwd()}")
+
     # Don't use shell=True on Windows - it spawns cmd.exe which may interfere with GPU visibility
     process = subprocess.run(
         command, capture_output=True, cwd=cwd, shell=False, text=True, env=env
@@ -120,15 +125,10 @@ class TestROCmSanity:
             / offload_arch_executable_file
         ).resolve()
 
-        # On Windows, the issue is that Python subprocess doesn't go through the runner-controller
-        # hooks that set up GPU visibility. We need to use the wrapper-bin bash.CMD if available,
-        # or fall back to calling through PowerShell which does go through hooks.
-        if is_windows():
-            # Try using PowerShell to invoke offload-arch, as PowerShell commands go through hooks
-            ps_command = f"& '{offload_arch_path}'"
-            process = run_command(["powershell", "-NoProfile", "-Command", ps_command])
-        else:
-            process = run_command([str(offload_arch_path)])
+        # Run offload-arch to detect GPU architecture
+        logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
+        logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
+        process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
