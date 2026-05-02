@@ -153,7 +153,7 @@ def check_job_object():
 
     for flag_value, flag_name in flag_names.items():
         if flags & flag_value:
-            print(f"  ✓ {flag_name}")
+            print(f"  + {flag_name}")
 
     print("\nKey Settings:")
     print(f"  Active Process Limit: {job_info.BasicLimitInformation.ActiveProcessLimit}")
@@ -162,15 +162,15 @@ def check_job_object():
 
     # Check for breakaway (important for subprocess creation)
     if flags & JOB_OBJECT_LIMIT_BREAKAWAY_OK:
-        print("\n⚠️  BREAKAWAY_OK is SET - processes CAN break away from job")
+        print("\n[!] BREAKAWAY_OK is SET - processes CAN break away from job")
     elif flags & JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK:
-        print("\n⚠️  SILENT_BREAKAWAY_OK is SET - processes can silently break away")
+        print("\n[!] SILENT_BREAKAWAY_OK is SET - processes can silently break away")
     else:
-        print("\n❌ Breakaway NOT allowed - subprocesses stay in job object")
-        print("   This may restrict GPU access inheritance!")
+        print("\n[X] Breakaway NOT allowed - subprocesses stay in job object")
+        print("    This may restrict GPU access inheritance!")
 
     if flags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE:
-        print("❌ KILL_ON_JOB_CLOSE is SET - all processes die when job closes")
+        print("[X] KILL_ON_JOB_CLOSE is SET - all processes die when job closes")
 
     # Cleanup
     kernel32.CloseHandle(current_process)
