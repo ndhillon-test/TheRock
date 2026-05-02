@@ -149,7 +149,7 @@ class TestROCmSanityWorkaround:
 
         # Run the compiled executable
         platform_executable_prefix = "./" if not is_windows() else ""
-        hipcc_check_executable = f"{platform_executable_prefix}hipcc_check_workaround"
+        hipcc_check_executable = f"{platform_executable_prefix}hipcc_check_workaround{platform_executable_suffix}"
         process = run_command([hipcc_check_executable], cwd=str(THEROCK_BIN_DIR))
         check.equal(process.returncode, 0)
         check.greater(
