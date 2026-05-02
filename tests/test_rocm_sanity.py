@@ -136,38 +136,36 @@ class TestROCmSanity:
         logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
 
         # WORKAROUND for GitHub Actions runner GPU access issue on Windows:
-        # Python subprocess.run() fails to access GPU (hipErrorNoDevice) when run
-        # under GHA runner, while bash-spawned processes work fine.
-        # Root cause: GHA runner environment (not setup-python) blocks GPU driver
-        # access for Python subprocess children via process isolation (Job Objects).
-        # Tested: System Python has same issue as setup-python.
+        # Python venv subprocess cannot access GPU (all methods fail at depth 1+).
+        # Only workflow bash step (depth 0) can access GPU.
+        # Solution: Use pre-detected GPU arch from workflow environment variable.
         # See investigation: https://github.com/ROCm/TheRock/issues/4617
-        if is_windows():
-            logger.info("Windows: Using bash wrapper for offload-arch (GHA GPU access workaround)")
-            # Convert Windows path to bash-compatible format
-            bash_path = str(offload_arch_path).replace("\\", "/")
-            process = run_command(["bash", "-c", bash_path])
+        detected_gpu_arch = os.getenv("DETECTED_GPU_ARCH")
+        if is_windows() and detected_gpu_arch:
+            logger.info(f"Windows: Using pre-detected GPU arch from workflow: {detected_gpu_arch}")
+            offload_arch = detected_gpu_arch
         else:
+            # Linux or no pre-detection - run normally
             process = run_command([str(offload_arch_path)])
 
-        # Extract the arch from the command output, working around
-        # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
-        # to contain 'gfx####` text but some ROCm releases contained stray
-        # "HIP Library Path" logging first.
-        # **Note**: this partly defaults the purpose of the sanity check, since
-        # that should really be a test failure. However, per discussion on
-        # https://github.com/ROCm/TheRock/pull/3257 we found that system
-        # installs of ROCm (DLLs in system32) take precedence over user
-        # installs (PATH env var) under certain conditions. Hopefully a
-        # different unit test elsewhere in ROCm catches that more directly.
-        offload_arch = None
-        for line in process.stdout.splitlines():
-            if "gfx" in line:
-                offload_arch = line
-                break
-        assert (
-            offload_arch is not None
-        ), f"Expected offload-arch to return gfx####, got:\n{process.stdout}"
+            # Extract the arch from the command output, working around
+            # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
+            # to contain 'gfx####` text but some ROCm releases contained stray
+            # "HIP Library Path" logging first.
+            # **Note**: this partly defaults the purpose of the sanity check, since
+            # that should really be a test failure. However, per discussion on
+            # https://github.com/ROCm/TheRock/pull/3257 we found that system
+            # installs of ROCm (DLLs in system32) take precedence over user
+            # installs (PATH env var) under certain conditions. Hopefully a
+            # different unit test elsewhere in ROCm catches that more directly.
+            offload_arch = None
+            for line in process.stdout.splitlines():
+                if "gfx" in line:
+                    offload_arch = line
+                    break
+            assert (
+                offload_arch is not None
+            ), f"Expected offload-arch to return gfx####, got:\n{process.stdout}"
 
         # Compiling .cpp file using hipcc
         hipcc_check_executable_file = f"hipcc_check{platform_executable_suffix}"

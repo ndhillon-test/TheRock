@@ -188,6 +188,26 @@ jobs:
           echo "HSA_XNACK=1" >> $GITHUB_ENV
           echo "ASAN_SYMBOLIZER_PATH=${{ env.OUTPUT_ARTIFACTS_DIR }}/llvm/bin/llvm-symbolizer" >> $GITHUB_ENV
 
+      - name: Detect GPU architecture (Windows workaround)
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          # WORKAROUND: Run offload-arch at workflow level (depth 0) where GPU access works
+          # Python venv subprocess (depth 1+) cannot access GPU in GHA environment
+          # See investigation: https://github.com/ROCm/TheRock/issues/4617
+          OFFLOAD_ARCH="${OUTPUT_ARTIFACTS_DIR}/lib/llvm/bin/offload-arch.exe"
+
+          echo "Running offload-arch to detect GPU architecture..."
+          GPU_ARCH=$("$OFFLOAD_ARCH" 2>&1 | grep -o 'gfx[0-9]*' | head -1)
+
+          if [ -z "$GPU_ARCH" ]; then
+            echo "ERROR: Failed to detect GPU architecture"
+            "$OFFLOAD_ARCH"
+            exit 1
+          fi
+
+          echo "Detected GPU architecture: $GPU_ARCH"
+          echo "DETECTED_GPU_ARCH=$GPU_ARCH" >> $GITHUB_ENV
 
       - name: Test
         id: test
