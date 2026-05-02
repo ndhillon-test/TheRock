@@ -135,50 +135,20 @@ class TestROCmSanity:
         logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
         logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
 
-        # DEBUGGING: Investigate DLL loading behavior difference
-        # See https://github.com/ROCm/TheRock/issues/4604 and #4617
-        # offload-arch should print "Found HIP runtime: <path>" if verbose logging enabled
+        # WORKAROUND for GitHub Actions runner GPU access issue:
+        # On Windows, Python subprocess.run() fails to access GPU when run under
+        # GitHub Actions runner (hipErrorNoDevice), but bash-spawned processes work.
+        # This is NOT a general Python issue - subprocess works fine outside GHA.
+        # Root cause: GHA runner's process isolation (likely Job Objects) blocks
+        # Python child processes from GPU access while bash processes retain access.
+        # See investigation: https://github.com/ROCm/TheRock/issues/4617
         if is_windows():
-            logger.info("Windows debug: Investigating DLL loading behavior...")
-
-            # Enable verbose HIP logging to see which DLL is loaded
-            debug_env = os.environ.copy()
-            debug_env["AMD_LOG_LEVEL"] = "7"  # Maximum verbosity
-            debug_env["HIP_ENABLE_GPU_LOG"] = "1"
-            debug_env["HIP_VISIBLE_DEVICES"] = "0"  # Explicitly try to use GPU 0
-
-            # Method 1: Direct subprocess with verbose logging
-            logger.info("  Method 1: Direct subprocess.run() with verbose HIP logging")
-            test1 = subprocess.run([str(offload_arch_path)], capture_output=True, text=True, shell=False, env=debug_env)
-            logger.info(f"    Exit code: {test1.returncode}")
-            logger.info(f"    Stdout (full): {test1.stdout}")
-            logger.info(f"    Stderr (full): {test1.stderr}")
-
-            # Method 2: Using Process Explorer to check DLL loading
-            # Run with Windows Process Monitor flags if available
-            logger.info("  Method 2: Check loaded modules with DUMPBIN")
-            # Get list of DLL dependencies
-            dumpbin_result = subprocess.run(
-                ["dumpbin", "/DEPENDENTS", str(offload_arch_path)],
-                capture_output=True,
-                text=True,
-                shell=False
-            )
-            logger.info(f"    DLL dependencies:\n{dumpbin_result.stdout}")
-
-            # Method 3: Run through bash with same verbose env
-            logger.info("  Method 3: Through bash -c with verbose logging")
-            test3 = subprocess.run(
-                ["bash", "-c", f"export AMD_LOG_LEVEL=7; export HIP_ENABLE_GPU_LOG=1; export HIP_VISIBLE_DEVICES=0; {str(offload_arch_path)}"],
-                capture_output=True,
-                text=True,
-                shell=False
-            )
-            logger.info(f"    Exit code: {test3.returncode}")
-            logger.info(f"    Stdout (full): {test3.stdout}")
-            logger.info(f"    Stderr (full): {test3.stderr}")
-
-        process = run_command([str(offload_arch_path)])
+            logger.info("Windows: Using bash wrapper for offload-arch due to GHA runner GPU access issue")
+            # Convert Windows path to bash-compatible format
+            bash_path = str(offload_arch_path).replace("\\", "/")
+            process = run_command(["bash", "-c", bash_path])
+        else:
+            process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
