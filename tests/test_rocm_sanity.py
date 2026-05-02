@@ -38,7 +38,13 @@ def run_command(command: list[str], cwd=None, env=None):
         logger.info(f"   HIP_VISIBLE_DEVICES={exec_env.get('HIP_VISIBLE_DEVICES', '<not set>')}")
         logger.info(f"   ROCR_VISIBLE_DEVICES={exec_env.get('ROCR_VISIBLE_DEVICES', '<not set>')}")
         logger.info(f"   GPU_DEVICE_ORDINAL={exec_env.get('GPU_DEVICE_ORDINAL', '<not set>')}")
-        logger.info(f"   PATH (first 3)={os.pathsep.join(exec_env.get('PATH', '').split(os.pathsep)[:3])}")
+        path_parts = exec_env.get('PATH', '').split(os.pathsep)
+        logger.info(f"   PATH (first 3)={os.pathsep.join(path_parts[:3])}")
+        # Check if system32 is in PATH
+        has_system32 = any('system32' in p.lower() for p in path_parts)
+        logger.info(f"   PATH contains system32: {has_system32}")
+        if not has_system32:
+            logger.warning(f"   WARNING: system32 not in PATH! Full PATH has {len(path_parts)} entries")
 
     process = subprocess.run(
         command, capture_output=True, cwd=cwd, shell=is_windows(), text=True, env=env
