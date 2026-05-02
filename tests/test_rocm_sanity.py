@@ -120,9 +120,13 @@ class TestROCmSanity:
             / offload_arch_executable_file
         ).resolve()
 
-        # Let subprocess inherit environment naturally instead of explicitly copying
-        # to avoid potential environment variable issues on Windows
-        process = run_command([str(offload_arch_path)])
+        # On Windows, run offload-arch through bash wrapper to match working debug step behavior
+        # The debug bash step works, but direct subprocess from Python fails for unknown reasons
+        if is_windows():
+            wrapper_script = THIS_DIR / "run_offload_arch.sh"
+            process = run_command(["bash", str(wrapper_script), str(offload_arch_path)])
+        else:
+            process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output

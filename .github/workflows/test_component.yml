@@ -216,6 +216,10 @@ jobs:
           echo "File size: $(stat -c%s "$OFFLOAD_ARCH" 2>/dev/null || echo UNKNOWN)"
 
           echo ""
+          echo "=== DLLs in same directory as offload-arch.exe ==="
+          ls -lh "${OUTPUT_ARTIFACTS_DIR}/lib/llvm/bin/"*.dll 2>/dev/null | head -20 || echo "No DLLs in llvm/bin directory"
+
+          echo ""
           echo "=== DLL Dependencies (dumpbin) ==="
           dumpbin //DEPENDENTS "$OFFLOAD_ARCH" 2>&1 || echo "dumpbin failed or not available"
 
