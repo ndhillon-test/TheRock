@@ -28,7 +28,9 @@ env["AMD_LOG_LEVEL"] = "4"
 if sys.platform == "win32":
     output_artifacts_dir = Path(os.getenv("OUTPUT_ARTIFACTS_DIR", "./build")).resolve()
     env["HIP_CLANG_PATH"] = str(output_artifacts_dir / "lib" / "llvm" / "bin")
-    env["PATH"] = str(output_artifacts_dir / "bin") + os.pathsep + env.get("PATH", "")
+    # TEMPORARY: Disable PATH prepending to test if system DLLs work
+    # env["PATH"] = str(output_artifacts_dir / "bin") + os.pathsep + env.get("PATH", "")
+    logging.info(f"Skipping build/bin PATH prepending - using system DLLs for testing")
 
 cmd = [
     sys.executable,
