@@ -227,6 +227,52 @@ jobs:
 
           echo "=========================================="
 
+      - name: Check and Fix .hipVersion (Windows hipcc header path fix)
+        if: ${{ runner.os == 'Windows' }}
+        shell: bash
+        run: |
+          echo "=========================================="
+          echo "Checking for .hipVersion file"
+          echo "=========================================="
+          echo ""
+
+          echo ">>> Looking for .hipVersion in build:"
+          find ${OUTPUT_ARTIFACTS_DIR} -name ".hipVersion" 2>/dev/null || echo "No .hipVersion found"
+          echo ""
+
+          echo ">>> Checking build/bin/.hipVersion specifically:"
+          if [ -f "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion" ]; then
+            echo "Found: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+          else
+            echo "NOT FOUND: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+            echo ""
+            echo ">>> This is why hipcc uses system headers instead of build headers!"
+            echo ">>> hipcc looks for .hipVersion to find HIP installation directory"
+            echo ""
+            echo ">>> Checking system ROCm .hipVersion:"
+            cat "/c/Program Files/AMD/ROCm/6.4/bin/.hipVersion" 2>/dev/null || echo "System .hipVersion not found"
+            echo ""
+            echo ">>> Creating .hipVersion in build/bin/ as workaround:"
+            # Get version from hip_version.h if available
+            if [ -f "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" ]; then
+              HIP_VERSION_MAJOR=$(grep "HIP_VERSION_MAJOR" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | awk '{print $3}')
+              HIP_VERSION_MINOR=$(grep "HIP_VERSION_MINOR" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | awk '{print $3}')
+              HIP_VERSION_PATCH=$(grep "HIP_VERSION_PATCH" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | awk '{print $3}')
+              echo "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}" > "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+              echo "Created .hipVersion with version: ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}"
+            else
+              # Fallback: use a reasonable default
+              echo "6.4.0" > "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+              echo "Created .hipVersion with fallback version: 6.4.0"
+            fi
+            echo ""
+            echo ">>> Verifying created file:"
+            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
+          fi
+          echo ""
+          echo "=========================================="
+
       - name: Check Job Object Settings (Diagnostic)
         if: ${{ runner.os == 'Windows' }}
         shell: bash
