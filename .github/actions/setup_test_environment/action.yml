@@ -36,23 +36,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # EXPERIMENTAL: Skip setup-python on Windows to test if it's causing GPU access issue
-    # Investigation shows Python subprocess works on Windows outside GHA but fails inside GHA
-    # Hypothesis: setup-python action may be setting up Python in a way that blocks GPU access
     - name: "Setting up Python"
-      if: runner.os != 'Windows'
       uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
       env:
         RETRY_THIS_STEP: "true"
       with:
         python-version: 3.12
-
-    - name: "Verify Python availability (Windows uses system Python)"
-      if: runner.os == 'Windows'
-      shell: bash
-      run: |
-        echo "Python version: $(python --version)"
-        echo "Python path: $(which python)"
   
     - name: "Install UV (Windows)"
       if: runner.os == 'Windows'
