@@ -120,11 +120,13 @@ class TestROCmSanity:
             / offload_arch_executable_file
         ).resolve()
 
-        # On Windows, run offload-arch through bash wrapper to match working debug step behavior
-        # The debug bash step works, but direct subprocess from Python fails for unknown reasons
+        # On Windows, the issue is that Python subprocess doesn't go through the runner-controller
+        # hooks that set up GPU visibility. We need to use the wrapper-bin bash.CMD if available,
+        # or fall back to calling through PowerShell which does go through hooks.
         if is_windows():
-            wrapper_script = THIS_DIR / "run_offload_arch.sh"
-            process = run_command(["bash", str(wrapper_script), str(offload_arch_path)])
+            # Try using PowerShell to invoke offload-arch, as PowerShell commands go through hooks
+            ps_command = f"& '{offload_arch_path}'"
+            process = run_command(["powershell", "-NoProfile", "-Command", ps_command])
         else:
             process = run_command([str(offload_arch_path)])
 
