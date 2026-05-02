@@ -119,9 +119,9 @@ class TestROCmSanity:
             / offload_arch_executable_file
         ).resolve()
 
-        # Pass current environment to ensure GPU visibility settings are propagated
-        test_env = os.environ.copy()
-        process = run_command([str(offload_arch_path)], env=test_env)
+        # Let subprocess inherit environment naturally instead of explicitly copying
+        # to avoid potential environment variable issues on Windows
+        process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
