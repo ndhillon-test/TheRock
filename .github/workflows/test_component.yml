@@ -205,6 +205,22 @@ jobs:
           find ${OUTPUT_ARTIFACTS_DIR} -name "hip_runtime.h" 2>/dev/null || echo "No hip_runtime.h found in build"
           echo ""
 
+          echo ">>> Detailed contents of build/include/hip (recursive):"
+          ls -laR ${OUTPUT_ARTIFACTS_DIR}/include/hip/ 2>/dev/null | head -50 || echo "Cannot list build/include/hip"
+          echo ""
+
+          echo ">>> All files in build/include/hip:"
+          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -type f 2>/dev/null | head -30 || echo "No files found"
+          echo ""
+
+          echo ">>> Header files (.h) in build/include/hip:"
+          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -name "*.h" 2>/dev/null | head -30 || echo "No .h files found"
+          echo ""
+
+          echo ">>> Header files (.hpp) in build/include/hip:"
+          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -name "*.hpp" 2>/dev/null | head -30 || echo "No .hpp files found"
+          echo ""
+
           echo ">>> System ROCm headers:"
           ls -la "/c/Program Files/AMD/ROCm/6.4/include/hip/" 2>/dev/null | head -10 || echo "No system ROCm headers"
           echo ""
