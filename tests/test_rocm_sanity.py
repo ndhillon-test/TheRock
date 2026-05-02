@@ -128,6 +128,20 @@ class TestROCmSanity:
         # Run offload-arch to detect GPU architecture
         logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
         logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
+
+        # DEBUGGING: Try running a simple test first - can we execute offload-arch at all?
+        if is_windows():
+            logger.info("Windows debug: Testing if we can execute offload-arch...")
+            test_process = subprocess.run(
+                [str(offload_arch_path), "--help"],
+                capture_output=True,
+                text=True,
+                shell=False
+            )
+            logger.info(f"  Help command exit code: {test_process.returncode}")
+            logger.info(f"  Help stdout: {test_process.stdout[:200] if test_process.stdout else '<empty>'}")
+            logger.info(f"  Help stderr: {test_process.stderr[:200] if test_process.stderr else '<empty>'}")
+
         process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
