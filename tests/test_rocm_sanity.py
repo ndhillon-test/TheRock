@@ -135,20 +135,9 @@ class TestROCmSanity:
         logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
         logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
 
-        # WORKAROUND for GitHub Actions runner GPU access issue:
-        # On Windows, Python subprocess.run() fails to access GPU when run under
-        # GitHub Actions runner (hipErrorNoDevice), but bash-spawned processes work.
-        # This is NOT a general Python issue - subprocess works fine outside GHA.
-        # Root cause: GHA runner's process isolation (likely Job Objects) blocks
-        # Python child processes from GPU access while bash processes retain access.
-        # See investigation: https://github.com/ROCm/TheRock/issues/4617
-        if is_windows():
-            logger.info("Windows: Using bash wrapper for offload-arch due to GHA runner GPU access issue")
-            # Convert Windows path to bash-compatible format
-            bash_path = str(offload_arch_path).replace("\\", "/")
-            process = run_command(["bash", "-c", bash_path])
-        else:
-            process = run_command([str(offload_arch_path)])
+        # EXPERIMENTAL: Test if skipping setup-python action fixes GPU access
+        # Previously failed with setup-python, testing if system Python works
+        process = run_command([str(offload_arch_path)])
 
         # Extract the arch from the command output, working around
         # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
