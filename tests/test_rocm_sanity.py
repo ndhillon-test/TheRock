@@ -129,18 +129,43 @@ class TestROCmSanity:
         logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
         logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
 
-        # DEBUGGING: Try running a simple test first - can we execute offload-arch at all?
+        # DEBUGGING: Try different ways to run offload-arch
         if is_windows():
-            logger.info("Windows debug: Testing if we can execute offload-arch...")
-            test_process = subprocess.run(
-                [str(offload_arch_path), "--help"],
+            logger.info("Windows debug: Trying different execution methods...")
+
+            # Method 1: Direct subprocess
+            logger.info("  Method 1: Direct subprocess.run()")
+            test1 = subprocess.run([str(offload_arch_path)], capture_output=True, text=True, shell=False)
+            logger.info(f"    Exit code: {test1.returncode}")
+            logger.info(f"    Stdout: {test1.stdout[:100] if test1.stdout else '<empty>'}")
+            logger.info(f"    Stderr: {test1.stderr[:200] if test1.stderr else '<empty>'}")
+
+            # Method 2: Using CREATE_NEW_CONSOLE flag
+            logger.info("  Method 2: With CREATE_NEW_CONSOLE")
+            import ctypes
+            CREATE_NEW_CONSOLE = 0x00000010
+            test2 = subprocess.run(
+                [str(offload_arch_path)],
                 capture_output=True,
                 text=True,
-                shell=False
+                creationflags=CREATE_NEW_CONSOLE
             )
-            logger.info(f"  Help command exit code: {test_process.returncode}")
-            logger.info(f"  Help stdout: {test_process.stdout[:200] if test_process.stdout else '<empty>'}")
-            logger.info(f"  Help stderr: {test_process.stderr[:200] if test_process.stderr else '<empty>'}")
+            logger.info(f"    Exit code: {test2.returncode}")
+            logger.info(f"    Stdout: {test2.stdout[:100] if test2.stdout else '<empty>'}")
+            logger.info(f"    Stderr: {test2.stderr[:200] if test2.stderr else '<empty>'}")
+
+            # Method 3: Using DETACHED_PROCESS flag
+            logger.info("  Method 3: With DETACHED_PROCESS")
+            DETACHED_PROCESS = 0x00000008
+            test3 = subprocess.run(
+                [str(offload_arch_path)],
+                capture_output=True,
+                text=True,
+                creationflags=DETACHED_PROCESS
+            )
+            logger.info(f"    Exit code: {test3.returncode}")
+            logger.info(f"    Stdout: {test3.stdout[:100] if test3.stdout else '<empty>'}")
+            logger.info(f"    Stderr: {test3.stderr[:200] if test3.stderr else '<empty>'}")
 
         process = run_command([str(offload_arch_path)])
 
