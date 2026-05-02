@@ -242,8 +242,21 @@ jobs:
           echo "=== Full environment (AMD/ROCm/HIP/GPU related) ==="
           env | grep -iE "amd|rocm|hip|gpu|hsa|device|visible" || echo "No AMD/ROCm/HIP env vars found"
           echo ""
-          echo "=== Try running offload-arch directly ==="
-          "$OFFLOAD_ARCH" 2>&1 || echo "offload-arch failed with exit code $?"
+          echo "=== Try running offload-arch directly (BASH CONTEXT) ==="
+          echo "This is the WORKING case - bash successfully detects GPU"
+          echo "Related to issues #4604 and #4617 - offload-arch DLL loading behavior"
+
+          # Set verbose logging to see which DLL is loaded
+          export AMD_LOG_LEVEL=7
+          export HIP_ENABLE_GPU_LOG=1
+          export HIP_VISIBLE_DEVICES=0
+
+          echo "Running offload-arch with AMD_LOG_LEVEL=7 to see DLL loading..."
+          "$OFFLOAD_ARCH" 2>&1 | tee /tmp/offload_arch_bash.log || echo "offload-arch failed with exit code $?"
+
+          echo ""
+          echo "=== Searching for 'Found HIP runtime' or DLL loading messages ==="
+          grep -iE "found|runtime|dll|loading|amdhip|hsa-runtime" /tmp/offload_arch_bash.log || echo "No DLL loading messages found"
 
       - name: Debug - Verify TheRock runtime is used (not system ROCm)
         if: ${{ runner.os == 'Windows' }}
