@@ -51,6 +51,12 @@ def run_command(command: list[str], cwd=None, env=None):
         logger.info(f"   Parent PID: {os.getppid()}")
         logger.info(f"   CWD: {os.getcwd()}")
 
+        # Log AMD/ROCm related environment variables
+        logger.info("   AMD/ROCm/HIP environment variables:")
+        for key in sorted(exec_env.keys()):
+            if any(x in key.upper() for x in ['AMD', 'ROCM', 'HIP', 'GPU', 'HSA', 'DEVICE', 'VISIBLE']):
+                logger.info(f"     {key}={exec_env[key]}")
+
     # Don't use shell=True on Windows - it spawns cmd.exe which may interfere with GPU visibility
     process = subprocess.run(
         command, capture_output=True, cwd=cwd, shell=False, text=True, env=env
