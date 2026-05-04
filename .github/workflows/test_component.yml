@@ -9,9 +9,6 @@ on:
       artifact_run_id:
         type: string
         default: ""
-      artifact_run_github_repo:
-        type: string
-        default: "ROCm/TheRock"
       artifact_group:
         type: string
       amdgpu_families:
@@ -28,12 +25,6 @@ on:
       release_type:
         type: string
         default: ""
-      repository:
-        description: "Repository to checkout. Defaults to github.repository."
-        type: string
-      ref:
-        description: "Branch, tag, or SHA to checkout. Defaults to the triggering ref."
-        type: string
       default_container_image:
         type: string
         default: "ghcr.io/rocm/no_rocm_image_ubuntu24_04@sha256:4150afe4759d14822f0e3f8930e1124f26e11f68b5c7b91ec9a02b20b1ebbb98"
@@ -49,12 +40,7 @@ jobs:
       (shard ${{ matrix.shard }}/${{ fromJSON(inputs.component).total_shards }})
       (${{ inputs.amdgpu_families }})
       ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
-    runs-on: >-
-      ${{
-        fromJSON(inputs.component).runs_on_suffix != '' &&
-        format('{0}{1}', inputs.test_runs_on, fromJSON(inputs.component).runs_on_suffix) ||
-        inputs.test_runs_on
-      }}
+    runs-on: ${{ inputs.test_runs_on }}
     continue-on-error: ${{ fromJSON(inputs.component).expect_failure == true }}
     timeout-minutes: 210
     container:
@@ -107,8 +93,6 @@ jobs:
       - name: "Fetch 'build_tools' from repository"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          repository: ${{ inputs.repository || github.repository }}
-          ref: ${{ inputs.ref }}
           sparse-checkout: build_tools
           path: "prejob"
 
@@ -121,23 +105,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          repository: ${{ inputs.repository || github.repository }}
-          ref: ${{ inputs.ref }}
+          repository: "ROCm/TheRock"
 
       - name: Run setup test environment workflow
         timeout-minutes: 15
-        uses: './.github/actions/setup_test_environment'
         env:
           RETRY_THIS_STEP: "true"
           STEP_TIMEOUT_MINUTES: "15" # should match timeout-minutes specified above at this step
-          STEP_NAME_PREFIX: >-
-            Test ${{ fromJSON(inputs.component).job_name }}
-            (shard ${{ matrix.shard }}/${{ fromJSON(inputs.component).total_shards }})
-            (${{ inputs.amdgpu_families }})
-            ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
+        uses: './.github/actions/setup_test_environment'
         with:
           ARTIFACT_RUN_ID: ${{ env.ARTIFACT_RUN_ID }}
-          ARTIFACT_RUN_GITHUB_REPO: ${{ inputs.artifact_run_github_repo }}
           # TODO(#3381): revert back to `inputs.artifact_group` once issue is resolved
           ARTIFACT_GROUP: ${{ inputs.amdgpu_families }}
           AMDGPU_TARGETS: ${{ inputs.amdgpu_targets }}
@@ -152,19 +129,6 @@ jobs:
           git config --global --add safe.directory $PWD
           git config fetch.parallel 10
 
-      - name: Setup Visual Studio Environment
-        if: ${{ runner.os == 'Windows' }}
-        shell: cmd
-        run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
-          echo PATH=%PATH%>> %GITHUB_ENV%
-          echo INCLUDE=%INCLUDE%>> %GITHUB_ENV%
-          echo LIB=%LIB%>> %GITHUB_ENV%
-          echo LIBPATH=%LIBPATH%>> %GITHUB_ENV%
-          echo VisualStudioVersion=%VisualStudioVersion%>> %GITHUB_ENV%
-          echo VSCMD_ARG_HOST_ARCH=%VSCMD_ARG_HOST_ARCH%>> %GITHUB_ENV%
-          echo VSCMD_ARG_TGT_ARCH=%VSCMD_ARG_TGT_ARCH%>> %GITHUB_ENV%
-
       - name: Runner health status
         run: |
           python ./build_tools/health_status.py
@@ -173,134 +137,6 @@ jobs:
         timeout-minutes: 3
         run: |
           python ./build_tools/print_driver_gpu_info.py
-
-      - name: Check Build Artifacts Structure (Diagnostic)
-        if: ${{ runner.os == 'Windows' }}
-        shell: bash
-        run: |
-          echo "=========================================="
-          echo "Build Artifacts Structure Diagnostic"
-          echo "=========================================="
-          echo ""
-          echo "Checking if build has HIP headers..."
-          echo ""
-
-          echo ">>> Directory structure:"
-          ls -la ${OUTPUT_ARTIFACTS_DIR}/ || true
-          echo ""
-
-          echo ">>> Looking for include directories:"
-          find ${OUTPUT_ARTIFACTS_DIR} -type d -name "include" 2>/dev/null | head -10 || echo "No include dirs found"
-          echo ""
-
-          echo ">>> Looking for HIP directories:"
-          find ${OUTPUT_ARTIFACTS_DIR} -type d -name "hip" 2>/dev/null | head -10 || echo "No hip dirs found"
-          echo ""
-
-          echo ">>> Contents of build/include (if exists):"
-          ls -la ${OUTPUT_ARTIFACTS_DIR}/include/ 2>/dev/null || echo "No build/include directory"
-          echo ""
-
-          echo ">>> Looking for hip_runtime.h:"
-          find ${OUTPUT_ARTIFACTS_DIR} -name "hip_runtime.h" 2>/dev/null || echo "No hip_runtime.h found in build"
-          echo ""
-
-          echo ">>> Detailed contents of build/include/hip (recursive):"
-          ls -laR ${OUTPUT_ARTIFACTS_DIR}/include/hip/ 2>/dev/null | head -50 || echo "Cannot list build/include/hip"
-          echo ""
-
-          echo ">>> All files in build/include/hip:"
-          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -type f 2>/dev/null | head -30 || echo "No files found"
-          echo ""
-
-          echo ">>> Header files (.h) in build/include/hip:"
-          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -name "*.h" 2>/dev/null | head -30 || echo "No .h files found"
-          echo ""
-
-          echo ">>> Header files (.hpp) in build/include/hip:"
-          find ${OUTPUT_ARTIFACTS_DIR}/include/hip -name "*.hpp" 2>/dev/null | head -30 || echo "No .hpp files found"
-          echo ""
-
-          echo ">>> System ROCm headers:"
-          ls -la "/c/Program Files/AMD/ROCm/6.4/include/hip/" 2>/dev/null | head -10 || echo "No system ROCm headers"
-          echo ""
-
-          echo "=========================================="
-
-      - name: Check and Fix .hipVersion (Windows hipcc header path fix)
-        if: ${{ runner.os == 'Windows' }}
-        shell: bash
-        run: |
-          echo "=========================================="
-          echo "Checking for .hipVersion file"
-          echo "=========================================="
-          echo ""
-
-          echo ">>> Looking for .hipVersion in build:"
-          find ${OUTPUT_ARTIFACTS_DIR} -name ".hipVersion" 2>/dev/null || echo "No .hipVersion found"
-          echo ""
-
-          echo ">>> Checking build/bin/.hipVersion specifically:"
-          if [ -f "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion" ]; then
-            echo "Found: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-          else
-            echo "NOT FOUND: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-            echo ""
-            echo ">>> This is why hipcc uses system headers instead of build headers!"
-            echo ">>> hipcc looks for .hipVersion to find HIP installation directory"
-            echo ""
-            echo ">>> Checking system ROCm .hipVersion:"
-            cat "/c/Program Files/AMD/ROCm/6.4/bin/.hipVersion" 2>/dev/null || echo "System .hipVersion not found"
-            echo ""
-            echo ">>> Creating .hipVersion in build/bin/ as workaround:"
-            # Get version from hip_version.h if available
-            if [ -f "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" ]; then
-              HIP_VERSION_MAJOR=$(grep "^#define HIP_VERSION_MAJOR" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | head -1 | awk '{print $3}')
-              HIP_VERSION_MINOR=$(grep "^#define HIP_VERSION_MINOR" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | head -1 | awk '{print $3}')
-              HIP_VERSION_PATCH=$(grep "^#define HIP_VERSION_PATCH" "${OUTPUT_ARTIFACTS_DIR}/include/hip/hip_version.h" | head -1 | awk '{print $3}')
-
-              # Create .hipVersion file in same format as system ROCm
-              {
-                echo "# Auto-generated by cmake"
-                echo "HIP_PACKAGING_VERSION_PATCH=${HIP_VERSION_PATCH}"
-                echo "CPACK_DEBIAN_PACKAGE_RELEASE=local"
-                echo "CPACK_RPM_PACKAGE_RELEASE=local"
-                echo "HIP_VERSION_MAJOR=${HIP_VERSION_MAJOR}"
-                echo "HIP_VERSION_MINOR=${HIP_VERSION_MINOR}"
-                echo "HIP_VERSION_PATCH=${HIP_VERSION_PATCH}"
-                echo "HIP_VERSION_GITHASH=unknown"
-              } > "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-              echo "Created .hipVersion with version: ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH}"
-            else
-              # Fallback: use system .hipVersion as template
-              echo ">>> hip_version.h not found, using system .hipVersion as template"
-              if [ -f "/c/Program Files/AMD/ROCm/6.4/bin/.hipVersion" ]; then
-                cp "/c/Program Files/AMD/ROCm/6.4/bin/.hipVersion" "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-                echo "Copied system .hipVersion to build/bin/"
-              else
-                # Last resort fallback
-                echo "6.4.0" > "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-                echo "Created .hipVersion with fallback version: 6.4.0"
-              fi
-            fi
-            echo ""
-            echo ">>> Verifying created file:"
-            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-          fi
-          echo ""
-          echo "=========================================="
-
-      - name: Check Job Object Settings (Diagnostic)
-        if: ${{ runner.os == 'Windows' }}
-        shell: bash
-        run: |
-          echo "=== Depth 0: Workflow bash step (direct from GHA runner) ==="
-          python check_job_object.py
-
-          echo ""
-          echo "=== Depth 1: From venv Python subprocess ==="
-          python -c 'import subprocess; import sys; result = subprocess.run([sys.executable, "check_job_object.py"], capture_output=True, text=True); print(result.stdout); print(result.stderr, file=sys.stderr) if result.stderr else None'
 
       - name: Setup Additional Requirements
         if: ${{ fromJSON(inputs.component).additional_requirements_files != '' }}
@@ -315,79 +151,6 @@ jobs:
           echo "ASAN_OPTIONS=detect_odr_violation=0:quarantine_size_mb=600" >> $GITHUB_ENV
           echo "HSA_XNACK=1" >> $GITHUB_ENV
           echo "ASAN_SYMBOLIZER_PATH=${{ env.OUTPUT_ARTIFACTS_DIR }}/llvm/bin/llvm-symbolizer" >> $GITHUB_ENV
-
-      - name: Detect GPU architecture (Windows workaround)
-        if: ${{ runner.os == 'Windows' }}
-        shell: bash
-        run: |
-          # WORKAROUND: Run offload-arch at workflow level (depth 0) where GPU access works
-          # Python venv subprocess (depth 1+) cannot access GPU in GHA environment
-          # See investigation: https://github.com/ROCm/TheRock/issues/4617
-          OFFLOAD_ARCH="${OUTPUT_ARTIFACTS_DIR}/lib/llvm/bin/offload-arch.exe"
-
-          echo "Running offload-arch to detect GPU architecture..."
-          GPU_ARCH=$("$OFFLOAD_ARCH" 2>&1 | grep -o 'gfx[0-9]*' | head -1)
-
-          if [ -z "$GPU_ARCH" ]; then
-            echo "ERROR: Failed to detect GPU architecture"
-            "$OFFLOAD_ARCH"
-            exit 1
-          fi
-
-          echo "Detected GPU architecture: $GPU_ARCH"
-          echo "DETECTED_GPU_ARCH=$GPU_ARCH" >> $GITHUB_ENV
-
-      - name: Test GPU Detection - Comparison (ORIGINAL vs WORKAROUND)
-        if: ${{ runner.os == 'Windows' }}
-        continue-on-error: true
-        shell: bash
-        run: |
-          echo "=========================================="
-          echo "GPU Detection Comparison Test"
-          echo "=========================================="
-          echo ""
-          echo "DETECTED_GPU_ARCH from workflow: ${DETECTED_GPU_ARCH}"
-          echo ""
-          echo "Running BOTH versions to compare:"
-          echo "1. ORIGINAL (test_rocm_sanity_original.py) - WITHOUT workaround"
-          echo "2. WORKAROUND (test_rocm_sanity.py) - WITH workaround"
-          echo ""
-          echo "This will show if there's actually a difference!"
-          echo "=========================================="
-          echo ""
-
-          echo ">>> Pre-test verification: Check .hipVersion exists"
-          if [ -f "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion" ]; then
-            echo "CONFIRMED: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion exists"
-            cat "${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion"
-          else
-            echo "ERROR: ${OUTPUT_ARTIFACTS_DIR}/bin/.hipVersion NOT FOUND!"
-          fi
-          echo ""
-
-          echo ">>> TEST 1: ORIGINAL (no workaround) - Running offload-arch from subprocess"
-          python -m pytest tests/test_rocm_sanity_original.py::TestROCmSanity::test_hip_printf -v --log-cli-level=info --timeout=300 || echo "ORIGINAL TEST RESULT: $?"
-
-          echo ""
-          echo "=========================================="
-          echo ""
-
-          echo ">>> TEST 2: WORKAROUND - Using DETECTED_GPU_ARCH env var"
-          python -m pytest tests/test_rocm_sanity.py::TestROCmSanity::test_hip_printf -v --log-cli-level=info --timeout=300 || echo "WORKAROUND TEST RESULT: $?"
-
-          echo ""
-          echo "=========================================="
-          echo ""
-
-          echo ">>> DIAGNOSTIC: Confirm workaround is active"
-          python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_gpu_detection_diagnostic -v --log-cli-level=info
-
-          echo ""
-          echo "=========================================="
-          echo ""
-
-          echo ">>> TEST 3: FULL WORKAROUND - HIPCC_COMPILE_FLAGS_APPEND + DETECTED_GPU_ARCH"
-          python -m pytest tests/test_rocm_sanity_workaround.py::TestROCmSanityWorkaround::test_hip_printf_with_workaround -v --log-cli-level=info --timeout=300 || echo "FULL WORKAROUND TEST RESULT: $?"
 
       - name: Test
         id: test

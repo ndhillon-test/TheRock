@@ -29,37 +29,10 @@ def is_windows():
     return "windows" == platform.system().lower()
 
 
-def run_command(command: list[str], cwd=None, env=None):
+def run_command(command: list[str], cwd=None):
     logger.info(f"++ Run [{cwd}]$ {shlex.join(command)}")
-
-    # Log critical environment variables for Windows debugging
-    if is_windows():
-        exec_env = env or os.environ
-        logger.info(f"   HIP_VISIBLE_DEVICES={exec_env.get('HIP_VISIBLE_DEVICES', '<not set>')}")
-        logger.info(f"   ROCR_VISIBLE_DEVICES={exec_env.get('ROCR_VISIBLE_DEVICES', '<not set>')}")
-        logger.info(f"   GPU_DEVICE_ORDINAL={exec_env.get('GPU_DEVICE_ORDINAL', '<not set>')}")
-        path_parts = exec_env.get('PATH', '').split(os.pathsep)
-        logger.info(f"   PATH (first 3)={os.pathsep.join(path_parts[:3])}")
-        # Check if system32 is in PATH
-        has_system32 = any('system32' in p.lower() for p in path_parts)
-        logger.info(f"   PATH contains system32: {has_system32}")
-        if not has_system32:
-            logger.warning(f"   WARNING: system32 not in PATH! Full PATH has {len(path_parts)} entries")
-
-        # Log process context information
-        logger.info(f"   Current Python PID: {os.getpid()}")
-        logger.info(f"   Parent PID: {os.getppid()}")
-        logger.info(f"   CWD: {os.getcwd()}")
-
-        # Log AMD/ROCm related environment variables
-        logger.info("   AMD/ROCm/HIP environment variables:")
-        for key in sorted(exec_env.keys()):
-            if any(x in key.upper() for x in ['AMD', 'ROCM', 'HIP', 'GPU', 'HSA', 'DEVICE', 'VISIBLE']):
-                logger.info(f"     {key}={exec_env[key]}")
-
-    # Don't use shell=True on Windows - it spawns cmd.exe which may interfere with GPU visibility
     process = subprocess.run(
-        command, capture_output=True, cwd=cwd, shell=False, text=True, env=env
+        command, capture_output=True, cwd=cwd, shell=is_windows(), text=True
     )
     if process.returncode != 0:
         logger.error(f"Command failed!")
@@ -130,42 +103,26 @@ class TestROCmSanity:
             / "bin"
             / offload_arch_executable_file
         ).resolve()
+        process = run_command([str(offload_arch_path)])
 
-        # Run offload-arch to detect GPU architecture
-        logger.info(f"Attempting to run offload-arch from: {offload_arch_path}")
-        logger.info(f"offload-arch exists: {offload_arch_path.exists()}")
-
-        # WORKAROUND for GitHub Actions runner GPU access issue on Windows:
-        # Python venv subprocess cannot access GPU (all methods fail at depth 1+).
-        # Only workflow bash step (depth 0) can access GPU.
-        # Solution: Use pre-detected GPU arch from workflow environment variable.
-        # See investigation: https://github.com/ROCm/TheRock/issues/4617
-        detected_gpu_arch = os.getenv("DETECTED_GPU_ARCH")
-        if is_windows() and detected_gpu_arch:
-            logger.info(f"Windows: Using pre-detected GPU arch from workflow: {detected_gpu_arch}")
-            offload_arch = detected_gpu_arch
-        else:
-            # Linux or no pre-detection - run normally
-            process = run_command([str(offload_arch_path)])
-
-            # Extract the arch from the command output, working around
-            # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
-            # to contain 'gfx####` text but some ROCm releases contained stray
-            # "HIP Library Path" logging first.
-            # **Note**: this partly defaults the purpose of the sanity check, since
-            # that should really be a test failure. However, per discussion on
-            # https://github.com/ROCm/TheRock/pull/3257 we found that system
-            # installs of ROCm (DLLs in system32) take precedence over user
-            # installs (PATH env var) under certain conditions. Hopefully a
-            # different unit test elsewhere in ROCm catches that more directly.
-            offload_arch = None
-            for line in process.stdout.splitlines():
-                if "gfx" in line:
-                    offload_arch = line
-                    break
-            assert (
-                offload_arch is not None
-            ), f"Expected offload-arch to return gfx####, got:\n{process.stdout}"
+        # Extract the arch from the command output, working around
+        # https://github.com/ROCm/TheRock/issues/1118. We only expect the output
+        # to contain 'gfx####` text but some ROCm releases contained stray
+        # "HIP Library Path" logging first.
+        # **Note**: this partly defaults the purpose of the sanity check, since
+        # that should really be a test failure. However, per discussion on
+        # https://github.com/ROCm/TheRock/pull/3257 we found that system
+        # installs of ROCm (DLLs in system32) take precedence over user
+        # installs (PATH env var) under certain conditions. Hopefully a
+        # different unit test elsewhere in ROCm catches that more directly.
+        offload_arch = None
+        for line in process.stdout.splitlines():
+            if "gfx" in line:
+                offload_arch = line
+                break
+        assert (
+            offload_arch is not None
+        ), f"Expected offload-arch to return gfx####, got:\n{process.stdout}"
 
         # Compiling .cpp file using hipcc
         hipcc_check_executable_file = f"hipcc_check{platform_executable_suffix}"
