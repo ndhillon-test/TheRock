@@ -88,6 +88,8 @@ runs:
         RETRY_THIS_STEP: "true"
         STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Download and Unpack Artifacts"
         STEP_TIMEOUT_TOLERANCE: "2"
+        MONITOR_ALERT_CONDITIONS: |          
+          step_running >= 0 for 300s:notify[message="⏱️  Step running over 5 minutes"]    
       run: |
         python ./build_tools/install_rocm_from_artifacts.py \
           --run-id=${ARTIFACT_RUN_ID} \
