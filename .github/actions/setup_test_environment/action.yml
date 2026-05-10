@@ -91,7 +91,7 @@ runs:
         MONITOR_ALERT_CONDITIONS: |                                                                                                              
           step_running >= 0 for 120s:notify[message="⏱️  Step running over 2 minutes"]                                                            
           step_running >= 0 for 300s:notify[message="⚠️  WARNING: Step running over 5 minutes"]                                                   
-          step_running >= 0 for 420s:notify[message="🚨 CRITICAL: Step running over 7 minutes"]  
+          step_running >= 0 for 420s:notify[message="🚨 CRITICAL: Step running over 7 minutes"]
       run: |
         python ./build_tools/install_rocm_from_artifacts.py \
           --run-id=${ARTIFACT_RUN_ID} \
