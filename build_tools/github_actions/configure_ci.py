@@ -456,9 +456,11 @@ def matrix_generator(
 
                 # Select build runner using weighted distribution (90% Azure, 10% AWS)
                 # Sanitizer builds use ramdisk variants
-                matrix_row["build-runs-on"] = select_build_runner(
-                    platform, base_args.get("build_variant", "release")
-                )
+                # If build-runs-on is already set in the matrix, respect it
+                if "build-runs-on" not in matrix_row:
+                    matrix_row["build-runs-on"] = select_build_runner(
+                        platform, base_args.get("build_variant", "release")
+                    )
 
                 matrix_output.append(matrix_row)
 

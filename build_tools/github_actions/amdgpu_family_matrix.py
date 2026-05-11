@@ -208,6 +208,7 @@ amdgpu_family_info_matrix_presubmit = {
             "nightly_check_only_for_family": True,
         },
         "windows": {
+            "build-runs-on": "windows-gfx1151-gpu-rocm",
             "test-runs-on": "windows-gfx1151-gpu-rocm",
             # TODO(#2754): Add new benchmark-runs-on runner for benchmarks
             "benchmark-runs-on": "windows-gfx1151-gpu-rocm",
