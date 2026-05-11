@@ -10,6 +10,8 @@ on:
         type: string
       amdgpu_families:
         type: string
+      build_runs_on:
+        type: string
       build_variant_label:
         type: string
       build_variant_cmake_preset:
@@ -54,6 +56,7 @@ jobs:
     with:
       artifact_group: ${{ inputs.artifact_group }}
       amdgpu_families: ${{ inputs.amdgpu_families }}
+      build_runs_on: ${{ inputs.build_runs_on }}
       build_variant_label: ${{ inputs.build_variant_label }}
       build_variant_cmake_preset: ${{ inputs.build_variant_cmake_preset }}
       build_variant_suffix: ${{ inputs.build_variant_suffix }}

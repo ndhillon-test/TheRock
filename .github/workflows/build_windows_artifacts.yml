@@ -41,6 +41,9 @@ on:
         type: string
       artifact_group:
         type: string
+      build_runs_on:
+        type: string
+        default: azure-windows-scale-rocm
       build_variant_label:
         type: string
       build_variant_suffix:
@@ -58,7 +61,7 @@ permissions:
 jobs:
   build_windows_artifacts:
     name: Build ${{ inputs.build_variant_label }} (xfail ${{ inputs.expect_failure }})
-    runs-on: azure-windows-scale-rocm
+    runs-on: ${{ inputs.build_runs_on }}
     continue-on-error: ${{ inputs.expect_failure }}
     timeout-minutes: 720 # 12 hour timeout
     permissions:
