@@ -97,7 +97,10 @@ jobs:
           choco install --no-progress -y ccache
           # ninja pinned due to a bug in the 1.13.0 release:
           # https://github.com/ninja-build/ninja/issues/2616
+          # Temporarily enable community feed since internal proxy doesn't have 1.12.1
+          choco source enable -n=chocolatey
           choco install --no-progress -y ninja --version 1.12.1 --allow-downgrade
+          choco source disable -n=chocolatey
           choco install --no-progress -y strawberryperl
           echo "$PATH;C:\Strawberry\c\bin" >> $GITHUB_PATH
           choco install --no-progress -y awscli
