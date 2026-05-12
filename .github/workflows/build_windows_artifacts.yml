@@ -145,7 +145,10 @@ jobs:
             --log-dir "${BUILD_DIR}/logs/ccache"
 
       - name: Fetch sources
-        timeout-minutes: 30
+        timeout-minutes: 50
+        env:
+          MONITOR_CHECK_INTERVAL: "10"
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 70#2:notify[message="⚠️  WARNING: CPU at 70%+"]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
