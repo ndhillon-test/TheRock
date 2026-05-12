@@ -149,7 +149,7 @@ jobs:
         env:
           STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 70#2:notify[message="⚠️  WARNING: CPU at 70%+"]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 35#2:notify[message="⚠️  WARNING: CPU at 35%+"]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
