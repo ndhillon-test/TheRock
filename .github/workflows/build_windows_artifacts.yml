@@ -163,7 +163,7 @@ jobs:
 
       - name: Build therock-archives and therock-dist
         env:
-          MONITOR_ALERT_CONDITIONS: 'mem.available_mbytes < 431 for 10s:notify[message="⚠️  WARNING: Memory usage at 80% (available < 431 MB)"]'
+          MONITOR_ALERT_CONDITIONS: 'mem.available_mbytes < 431 for 10s:notify[message="⚠️  WARNING: Memory usage at 80% (available < 431 MB)"];cpu.load_percent >= 80 for 10s:notify[message="⚠️  WARNING: CPU usage at 80% or higher"]'
         run: |
           cmake --build "${{ env.BUILD_DIR }}" --target therock-archives therock-dist -- -k 0
 
