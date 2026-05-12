@@ -93,32 +93,31 @@ jobs:
         # Try internal proxy if reachable, otherwise use community feed
         run: |
           # Check if internal proxy is reachable
-          if (Test-Connection -ComputerName 10.0.167.96 -Count 1 -Quiet) {
+          if ping -n 1 -w 1000 10.0.167.96 > /dev/null 2>&1; then
             echo "Internal proxy reachable, using internal feed"
             choco source disable -n=chocolatey
             choco source add -n=internal -s http://10.0.167.96:8081/repository/choco-group/ --priority=1
-            $useInternal = $true
-          } else {
+            USE_INTERNAL=true
+          else
             echo "Internal proxy not reachable, using community feed"
-            $useInternal = $false
-          }
+            USE_INTERNAL=false
+          fi
           choco install --no-progress -y ccache
           # ninja pinned due to a bug in the 1.13.0 release:
           # https://github.com/ninja-build/ninja/issues/2616
           # Community feed needed for ninja 1.12.1 (not in internal proxy)
-          if ($useInternal) {
+          if [ "$USE_INTERNAL" = "true" ]; then
             choco source enable -n=chocolatey
-          }
+          fi
           choco install --no-progress -y ninja --version 1.12.1 --allow-downgrade
-          if ($useInternal) {
+          if [ "$USE_INTERNAL" = "true" ]; then
             choco source disable -n=chocolatey
-          }
+          fi
           choco install --no-progress -y strawberryperl
           echo "$PATH;C:\Strawberry\c\bin" >> $GITHUB_PATH
           choco install --no-progress -y awscli
           choco install --no-progress -y pkgconfiglite
           echo "$PATH;C:\Program Files\Amazon\AWSCLIV2" >> $GITHUB_PATH
-        shell: pwsh
 
       - uses: iterative/setup-dvc@4bdfd2b0f6f1ad7e08afadb03b1a895c352a5239 # v2.0.0
         with:
