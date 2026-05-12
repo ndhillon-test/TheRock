@@ -90,22 +90,35 @@ jobs:
           pip install -r requirements.txt
 
       - name: Install requirements
-        # The first two lines removes the default commmunity feed and uses the internal proxy feed
+        # Try internal proxy if reachable, otherwise use community feed
         run: |
-          choco source disable -n=chocolatey
-          choco source add -n=internal -s http://10.0.167.96:8081/repository/choco-group/ --priority=1
+          # Check if internal proxy is reachable
+          if (Test-Connection -ComputerName 10.0.167.96 -Count 1 -Quiet) {
+            echo "Internal proxy reachable, using internal feed"
+            choco source disable -n=chocolatey
+            choco source add -n=internal -s http://10.0.167.96:8081/repository/choco-group/ --priority=1
+            $useInternal = $true
+          } else {
+            echo "Internal proxy not reachable, using community feed"
+            $useInternal = $false
+          }
           choco install --no-progress -y ccache
           # ninja pinned due to a bug in the 1.13.0 release:
           # https://github.com/ninja-build/ninja/issues/2616
-          # Temporarily enable community feed since internal proxy doesn't have 1.12.1
-          choco source enable -n=chocolatey
+          # Community feed needed for ninja 1.12.1 (not in internal proxy)
+          if ($useInternal) {
+            choco source enable -n=chocolatey
+          }
           choco install --no-progress -y ninja --version 1.12.1 --allow-downgrade
-          choco source disable -n=chocolatey
+          if ($useInternal) {
+            choco source disable -n=chocolatey
+          }
           choco install --no-progress -y strawberryperl
           echo "$PATH;C:\Strawberry\c\bin" >> $GITHUB_PATH
           choco install --no-progress -y awscli
           choco install --no-progress -y pkgconfiglite
           echo "$PATH;C:\Program Files\Amazon\AWSCLIV2" >> $GITHUB_PATH
+        shell: pwsh
 
       - uses: iterative/setup-dvc@4bdfd2b0f6f1ad7e08afadb03b1a895c352a5239 # v2.0.0
         with:
