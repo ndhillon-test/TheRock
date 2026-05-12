@@ -72,7 +72,7 @@ jobs:
     strategy:
       fail-fast: true
     env:
-      BUILD_DIR: B:\build
+      BUILD_DIR: ${{ github.workspace }}\build
       CACHE_DIR: "${{github.workspace}}/.cache"
       CCACHE_CONFIGPATH: "${{github.workspace}}/.ccache/ccache.conf"
       TEATIME_FORCE_INTERACTIVE: 0
