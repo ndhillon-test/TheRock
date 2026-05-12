@@ -147,6 +147,9 @@ jobs:
       - name: Fetch sources
         timeout-minutes: 50
         env:
+          RETRY_THIS_STEP: "true"
+          RETRY_COUNT: "1"
+          RETRY_DELAY: "7"
           STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
           MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 0.80#2:notify[message="⚠️  WARNING: CPU at 80%+"]'
@@ -167,6 +170,9 @@ jobs:
 
       - name: Build therock-archives and therock-dist
         env:
+          RETRY_THIS_STEP: "true"
+          RETRY_COUNT: "1"
+          RETRY_DELAY: "7"
           MONITOR_CHECK_INTERVAL: "10"
           MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 0.80#2:notify[message="⚠️  WARNING: CPU at 80%+"]'
         run: |
