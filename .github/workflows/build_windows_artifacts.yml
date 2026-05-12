@@ -100,6 +100,9 @@ jobs:
             USE_INTERNAL=true
           else
             echo "Internal proxy not reachable, using community feed"
+            # Remove internal source if it exists from previous runs
+            choco source remove -n=internal 2>/dev/null || true
+            choco source enable -n=chocolatey
             USE_INTERNAL=false
           fi
           choco install --no-progress -y ccache
