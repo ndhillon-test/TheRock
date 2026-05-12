@@ -147,6 +147,7 @@ jobs:
       - name: Fetch sources
         timeout-minutes: 50
         env:
+          STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
           MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 8851581563#2:notify[message="⚠️  WARNING: Memory at 70% (8.2GB used)"];step_cpu_percent >= 70#2:notify[message="⚠️  WARNING: CPU at 70%+"]'
         run: |
