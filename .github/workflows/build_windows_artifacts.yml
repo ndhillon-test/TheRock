@@ -149,7 +149,7 @@ jobs:
         env:
           STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:run_command[command="node -e \"console.log('\''🚨 MEMORY ALERT (>= 10GB for 2 samples)'\''); require('\''fs'\'').writeFileSync(process.env.RUNNER_TEMP + '\''/memory-alert-${{ github.run_id }}-${{ github.run_attempt }}.txt'\'', '\''memory_alert_triggered'\'')\""];step_cpu_percent >= 900#2:run_command[command="node -e \"console.log('\''🚨 CPU USAGE ALERT (>= 900% for 2 samples)'\''); require('\''fs'\'').writeFileSync(process.env.RUNNER_TEMP + '\''/cpu-alert-${{ github.run_id }}-${{ github.run_attempt }}.txt'\'', '\''cpu_alert_triggered'\'')\""]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:run_command[command="echo 🚨 MEMORY ALERT (>= 10GB for 2 samples)"];step_cpu_percent >= 900#2:run_command[command="echo 🚨 CPU USAGE ALERT (>= 900% for 2 samples)"]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
