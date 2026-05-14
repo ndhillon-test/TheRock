@@ -147,12 +147,9 @@ jobs:
       - name: Fetch sources
         timeout-minutes: 50
         env:
-          RETRY_THIS_STEP: "true"
-          RETRY_COUNT: "1"
-          RETRY_DELAY: "7"
           STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 6322765824#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 6322765824 bytes for 2 samples)",exit_code=43];step_cpu_percent >= 600#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 600% for 2 samples)",exit_code=42]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 10GB for 2 samples)",exit_code=43];step_cpu_percent >= 900#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 900% for 2 samples)",exit_code=42]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
@@ -174,7 +171,7 @@ jobs:
           RETRY_COUNT: "1"
           RETRY_DELAY: "7"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 6322765824#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 6322765824 bytes for 2 samples)",exit_code=43];step_cpu_percent >= 600#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 600% for 2 samples)",exit_code=42]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 10GB for 2 samples)",exit_code=43];step_cpu_percent >= 900#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 900% for 2 samples)",exit_code=42]'
         run: |
           cmake --build "${{ env.BUILD_DIR }}" --target therock-archives therock-dist -- -k 0
 
