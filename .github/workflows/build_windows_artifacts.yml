@@ -148,8 +148,8 @@ jobs:
         timeout-minutes: 50
         env:
           STEP_TIMEOUT_MINUTES: "50"
-          MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:notify[message="Memory >= 10GB for 2 samples"];step_cpu_percent >= 900#2:notify[message="CPU >= 900% for 2 samples"]'
+          MONITOR_CHECK_INTERVAL: "3"
+          MONITOR_ALERT_CONDITIONS: 'step_cpu_percent >= 900 for 30s:notify[message="CPU exceeded 900% for 30s"];step_memory_bytes >= 10737418240 for 30s:notify[message="Memory exceeded 10GB for 30s"]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
@@ -170,8 +170,8 @@ jobs:
           RETRY_THIS_STEP: "true"
           RETRY_COUNT: "1"
           RETRY_DELAY: "7"
-          MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 10GB for 2 samples)",exit_code=43];step_cpu_percent >= 900#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 900% for 2 samples)",exit_code=42]'
+          MONITOR_CHECK_INTERVAL: "3"
+          MONITOR_ALERT_CONDITIONS: 'step_cpu_percent >= 900 for 30s:kill_step[message="CPU exceeded 900% for 30s",exit_code=42];step_memory_bytes >= 10737418240 for 30s:kill_step[message="Memory exceeded 10GB for 30s",exit_code=43]'
         run: |
           cmake --build "${{ env.BUILD_DIR }}" --target therock-archives therock-dist -- -k 0
 
