@@ -152,7 +152,7 @@ jobs:
           RETRY_DELAY: "7"
           STEP_TIMEOUT_MINUTES: "50"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10115972956#2:notify[message="⚠️  WARNING: Memory at 80% (9.4GB used)"];step_cpu_percent >= 1280#2:notify[message="⚠️  WARNING: CPU at 80% capacity"]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 6322765824#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 6322765824 bytes for 2 samples)",exit_code=43];step_cpu_percent >= 600#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 600% for 2 samples)",exit_code=42]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
@@ -174,7 +174,7 @@ jobs:
           RETRY_COUNT: "1"
           RETRY_DELAY: "7"
           MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10115972956#2:notify[message="⚠️  WARNING: Memory at 80% (9.4GB used)"];step_cpu_percent >= 1280#2:notify[message="⚠️  WARNING: CPU at 80% capacity"]'
+          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 6322765824#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 6322765824 bytes for 2 samples)",exit_code=43];step_cpu_percent >= 600#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 600% for 2 samples)",exit_code=42]'
         run: |
           cmake --build "${{ env.BUILD_DIR }}" --target therock-archives therock-dist -- -k 0
 
