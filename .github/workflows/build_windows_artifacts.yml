@@ -146,10 +146,6 @@ jobs:
 
       - name: Fetch sources
         timeout-minutes: 50
-        env:
-          STEP_TIMEOUT_MINUTES: "50"
-          MONITOR_CHECK_INTERVAL: "10"
-          MONITOR_ALERT_CONDITIONS: 'step_memory_bytes >= 10737418240#2:kill_step[message="Memory limit exceeded (step_memory_bytes >= 10GB for 2 samples)",exit_code=43];step_cpu_percent >= 900#2:kill_step[message="CPU limit exceeded (step_cpu_percent >= 900% for 2 samples)",exit_code=42]'
         run: |
           git config fetch.parallel 10
           git config --global core.symlinks true
