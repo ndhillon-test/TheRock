@@ -134,6 +134,7 @@ jobs:
   test_sanity_check:
     name: 'Test Sanity Check'
     needs: configure_test_matrix
+    if: ${{ needs.configure_test_matrix.outputs.sanity_component != '' }}
     uses: './.github/workflows/test_component.yml'
     with:
       artifact_run_id: ${{ inputs.artifact_run_id }}
