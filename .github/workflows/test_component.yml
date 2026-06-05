@@ -190,7 +190,7 @@ jobs:
             (${{ inputs.amdgpu_families }})
             ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
           HOST_CPU_LIMIT: 80              # Kill at 80% CPU
-          HOST_MEMORY_LIMIT: 80           # Kill at 80% memory
+          HOST_MEMORY_LIMIT: 30           # Kill at 30% memory
           HOST_SAMPLE_WINDOW: 3           # 3 consecutive violations
         run: |
           ${{ fromJSON(inputs.component).test_script }}
