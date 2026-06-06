@@ -189,9 +189,9 @@ jobs:
             (shard ${{ matrix.shard }}/${{ fromJSON(inputs.component).total_shards }})
             (${{ inputs.amdgpu_families }})
             ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
-          HOST_CPU_LIMIT: 95              # Kill at 80% CPU
-          HOST_MEMORY_LIMIT: 85           # Kill at 30% memory
-          HOST_SAMPLE_WINDOW: 3           # 3 consecutive violations
+          HOST_METRICS_NAMES: "cpu_percent,memory_percent"
+          HOST_METRICS_THRESHOLD: "95,85"
+          HOST_METRICS_SAMPLE_WINDOW: "30,3"  # CPU: 30 samples, Memory: 3 samples
         run: |
           ${{ fromJSON(inputs.component).test_script }}
 
