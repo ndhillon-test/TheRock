@@ -190,8 +190,8 @@ jobs:
             (${{ inputs.amdgpu_families }})
             ${{ fromJSON(inputs.component).expect_failure == true && '(xfail)' || '' }}
           HOST_METRICS_NAMES: "cpu_percent,memory_percent"
-          HOST_METRICS_THRESHOLD: "95,85"
-          HOST_METRICS_SAMPLE_WINDOW: "30,15"  # CPU: 30 samples, Memory: 3 samples
+          HOST_METRICS_THRESHOLD: "95,95"
+          HOST_METRICS_SAMPLE_WINDOW: "30,15"  # CPU: 30 samples, Memory: 15 samples
         run: |
           ${{ fromJSON(inputs.component).test_script }}
 
