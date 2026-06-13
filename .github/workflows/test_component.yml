@@ -192,7 +192,7 @@ jobs:
           HOST_METRICS_NAMES: "cpu_percent,memory_percent"
           HOST_METRICS_THRESHOLD: "95,95"
           HOST_METRICS_SAMPLE_WINDOW: "30,15"  # CPU: 30 samples, Memory: 15 samples
-          NO_OUTPUT_TIMEOUT: 5  # 15 minutes
+          NO_OUTPUT_TIMEOUT: 2  # 2 minutes for testing
           SELF_HEALING_ACTIONS: |
             124:wmi_self_heal    # Only on no-output-timeout
             124:retry[max_attempts=1]
