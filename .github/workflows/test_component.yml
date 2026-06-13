@@ -194,7 +194,8 @@ jobs:
           HOST_METRICS_SAMPLE_WINDOW: "30,5"  # CPU: 30 samples, Memory: 5 samples
           DISABLE_NO_OUTPUT_TIMEOUT : ${{ ((contains(runner.name, 'sh7-g0') || contains(runner.name, 'strixhalo') || contains(runner.name, 'StrixHalo') || contains(runner.name, 'STRIXHALO')) && fromJSON(inputs.component).job_name == 'hip-tests (PAL)') && 'false' || 'true' }}
           NO_OUTPUT_TIMEOUT: 10  # 10 minutes for testing
-          SELF_HEALING_ACTIONS: "124:wmi_self_heal;*:retry[max_attempts=1,delay_seconds=7]"
+          #SELF_HEALING_ACTIONS: "124:wmi_self_heal;*:retry[max_attempts=1,delay_seconds=7]"
+          SELF_HEALING_ACTIONS: "*:retry[max_attempts=1,delay_seconds=12]"
           ENABLE_SELF_HEALING: ${{ (contains(runner.name, 'sh7-g0') || contains(runner.name, 'strixhalo') || contains(runner.name, 'StrixHalo') || contains(runner.name, 'STRIXHALO')) && 'true' || 'false' }}
         run: |
           ${{ fromJSON(inputs.component).test_script }}
