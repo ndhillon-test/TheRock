@@ -194,7 +194,7 @@ jobs:
           HOST_METRICS_SAMPLE_WINDOW: "30,15"  # CPU: 30 samples, Memory: 15 samples
           NO_OUTPUT_TIMEOUT: 2  # 2 minutes for testing
           SELF_HEALING_ACTIONS: "124:wmi_self_heal;124:retry[max_attempts=1,delay_seconds=7]"
-          ENABLE_SELF_HEALING: ${{ (contains(runner.name, 'strixhalo') || contains(runner.name, 'StrixHalo') || contains(runner.name, 'STRIXHALO') || contains(runner.name, 'Strixhalo')) && 'true' || 'false' }}
+          ENABLE_SELF_HEALING: ${{ contains(runner.name, 'sh7-g0') && 'true' || 'false' }}
         run: |
           ${{ fromJSON(inputs.component).test_script }}
 
