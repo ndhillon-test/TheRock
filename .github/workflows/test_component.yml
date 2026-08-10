@@ -41,6 +41,10 @@ on:
       default_container_image:
         type: string
         default: "ghcr.io/rocm/no_rocm_image_ubuntu24_04@sha256:4150afe4759d14822f0e3f8930e1124f26e11f68b5c7b91ec9a02b20b1ebbb98"
+      test_sleep_seconds:
+        description: "Sleep duration in seconds for testing composite action timeout behavior (e.g. 900 for 15 minutes)"
+        type: string
+        default: "0"
 
 
 permissions:
@@ -158,6 +162,7 @@ jobs:
           VENV_DIR: ${{ env.VENV_DIR }}
           FETCH_ARTIFACT_ARGS: ${{ fromJSON(inputs.component).fetch_artifact_args }}
           RELEASE_TYPE: ${{ inputs.release_type }}
+          TEST_SLEEP_SECONDS: ${{ inputs.test_sleep_seconds }}
 
       # safe.directory must be set before Runner Health Status
       - name: Adjust git config

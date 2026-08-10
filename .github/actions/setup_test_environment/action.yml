@@ -32,6 +32,9 @@ inputs:
   STEP_TIMEOUT_MINUTES:
     description: (string) Timeout in minutes for this step
     default: ""
+  TEST_SLEEP_SECONDS:
+    description: (string) Sleep duration in seconds for testing timeout behavior (e.g. 900 for 15 minutes)
+    default: "0"
 
 runs:
   using: "composite"
@@ -42,6 +45,14 @@ runs:
         STEP_RETRY: "true"
       with:
         python-version: 3.12
+
+    - name: "Test sleep for timeout behavior"
+      if: ${{ inputs.TEST_SLEEP_SECONDS != '0' }}
+      shell: bash
+      run: |
+        echo "Sleeping for ${{ inputs.TEST_SLEEP_SECONDS }} seconds to test timeout behavior..."
+        sleep ${{ inputs.TEST_SLEEP_SECONDS }}
+        echo "Sleep completed"
 
     - name: "Install UV"
       shell: bash

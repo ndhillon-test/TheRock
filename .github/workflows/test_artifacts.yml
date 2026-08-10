@@ -57,7 +57,10 @@ on:
         options:
           - release
           - asan
-        default: release
+      test_sleep_seconds:
+        description: "Sleep duration in seconds for testing composite action timeout (e.g., 900 for 15 minutes)"
+        type: string
+        default: "0"
   workflow_call:
     inputs:
       artifact_group:
@@ -105,6 +108,10 @@ on:
         description: "Build variant (e.g., release, asan)."
         type: string
         default: "release"
+      test_sleep_seconds:
+        description: "Sleep duration in seconds for testing composite action timeout (e.g., 900 for 15 minutes)"
+        type: string
+        default: "0"
   push:
     branches:
       - ADHOCBUILD
@@ -204,6 +211,7 @@ jobs:
       repository: ${{ inputs.repository }}
       ref: ${{ inputs.ref }}
       build_variant: ${{ inputs.build_variant }}
+      test_sleep_seconds: ${{ inputs.test_sleep_seconds }}
 
   test_components:
     name: 'Test ${{ matrix.components.job_name }}'
@@ -260,6 +268,7 @@ jobs:
       repository: ${{ inputs.repository }}
       ref: ${{ inputs.ref }}
       build_variant: ${{ inputs.build_variant }}
+      test_sleep_seconds: ${{ inputs.test_sleep_seconds }}
 
   notify_quartz_completed:
     if: ${{ always() && vars.NOTIFY_QUARTZ_ENABLED == 'true' }}
