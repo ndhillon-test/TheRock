@@ -57,6 +57,7 @@ on:
         options:
           - release
           - asan
+        default: release
       test_sleep_seconds:
         description: "Sleep duration in seconds for testing composite action timeout (e.g., 900 for 15 minutes)"
         type: string
