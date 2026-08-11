@@ -43,12 +43,15 @@ runs:
       uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       env:
         STEP_RETRY: "true"
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Setting up Python"
       with:
         python-version: 3.12
 
     - name: "Test sleep for timeout behavior"
       if: ${{ inputs.TEST_SLEEP_SECONDS != '0' }}
       shell: bash
+      env:
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Test sleep for timeout behavior"
       run: |
         echo "Sleeping for ${{ inputs.TEST_SLEEP_SECONDS }} seconds to test timeout behavior..."
         sleep ${{ inputs.TEST_SLEEP_SECONDS }}
@@ -56,6 +59,8 @@ runs:
 
     - name: "Install UV"
       shell: bash
+      env:
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Install UV"
       run: |
         pip install uv
 
@@ -63,6 +68,7 @@ runs:
       shell: bash
       env:
         VENV_DIR: ${{ inputs.VENV_DIR }}
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Create Python venv"
       run: |
         python build_tools/setup_venv.py ${VENV_DIR} \
           --activate-in-future-github-actions-steps \
@@ -70,6 +76,8 @@ runs:
 
     - name: Install test requirements
       shell: bash
+      env:
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Install test requirements"
       run: |
         uv pip install -r requirements-test.txt
         uv pip freeze
@@ -77,6 +85,8 @@ runs:
     - name: Install Choco tools
       if: ${{ runner.os == 'Windows' }}
       shell: bash
+      env:
+        STEP_NAME: "${{ env.STEP_NAME_PREFIX }} - Install Choco tools"
       run: |
         choco install --no-progress -y ninja
 
