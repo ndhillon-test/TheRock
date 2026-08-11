@@ -200,6 +200,7 @@ jobs:
     secrets: inherit
     with:
       artifact_run_id: ${{ inputs.artifact_run_id }}
+      artifact_run_github_repo: ${{ inputs.repository || github.repository }}
       artifact_group: ${{ inputs.artifact_group }}
       amdgpu_families: ${{ inputs.amdgpu_families }}
       amdgpu_targets: ${{ inputs.amdgpu_targets }}
@@ -237,6 +238,7 @@ jobs:
     secrets: inherit
     with:
       artifact_run_id: ${{ inputs.artifact_run_id }}
+      artifact_run_github_repo: ${{ inputs.repository || github.repository }}
       artifact_group: ${{ inputs.artifact_group }}
       amdgpu_families: ${{ inputs.amdgpu_families }}
       amdgpu_targets: ${{ inputs.amdgpu_targets }}
