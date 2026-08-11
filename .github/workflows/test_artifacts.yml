@@ -46,8 +46,9 @@ on:
           - dev
         default: ci
       repository:
-        description: "Repository to checkout. Defaults to github.repository."
+        description: "Repository to checkout. Defaults to ROCm/TheRock."
         type: string
+        default: "ROCm/TheRock"
       ref:
         description: "Branch, tag, or SHA to checkout. Defaults to the triggering ref."
         type: string
@@ -100,8 +101,9 @@ on:
         type: string
         default: ci
       repository:
-        description: "Repository to checkout. Defaults to github.repository."
+        description: "Repository to checkout. Defaults to ROCm/TheRock."
         type: string
+        default: "ROCm/TheRock"
       ref:
         description: "Branch, tag, or SHA to checkout. Defaults to the triggering ref."
         type: string
@@ -148,7 +150,7 @@ jobs:
       - name: Checking out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ inputs.repository || github.repository }}
+          repository: ${{ inputs.repository }}
           ref: ${{ inputs.ref }}
 
       - name: Checkout CI config
