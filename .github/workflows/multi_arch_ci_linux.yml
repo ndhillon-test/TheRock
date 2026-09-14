@@ -120,6 +120,7 @@ jobs:
     uses: ./.github/workflows/test_artifacts_structure.yml
     secrets: inherit
     with:
+      artifact_github_repo: ROCm/rockrel
       amdgpu_families: ${{ fromJSON(inputs.build_config).dist_amdgpu_families }}
       platform: linux
       release_type: ${{ inputs.release_type }}
